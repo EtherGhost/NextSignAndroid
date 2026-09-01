@@ -1,0 +1,4 @@
+<resources>
+    <!-- Matches the background fill in the Ubuntu Touch app's assets/logo.svg. -->
+    <color name="ic_launcher_background">#1F6FEB</color>
+</resources>

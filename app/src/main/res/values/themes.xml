@@ -1,0 +1,5 @@
+<resources>
+    <!-- Only used as the launch/window theme before Compose content is set - the
+         actual UI theming happens in Kotlin via MaterialTheme. -->
+    <style name="Theme.NextSign" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
