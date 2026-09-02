@@ -4,26 +4,46 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import se.cloudsite.nextsign.model.LibreSignDocument
 import se.cloudsite.nextsign.model.statusLabel
 
-// Read-only for now (per-signer status only) - Sign/Validate actions land in the next
-// porting step, matching the plan's staged sequence.
+// A custom Dialog rather than AlertDialog's fixed confirm/dismiss button pair - this
+// needs up to four actions (Sign, Validation info, Open file, Close), mirroring the
+// Ubuntu Touch app's own detail popup's stacked-button layout.
 @Composable
-fun DocumentDetailDialog(document: LibreSignDocument, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(document.name.ifEmpty { "Untitled document" }) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+fun DocumentDetailDialog(
+    document: LibreSignDocument,
+    signing: Boolean,
+    validating: Boolean,
+    downloading: Boolean,
+    onSignClick: () -> Unit,
+    onValidateClick: () -> Unit,
+    onOpenFileClick: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val busy = signing || validating || downloading
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(shape = MaterialTheme.shapes.large) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(document.name.ifEmpty { "Untitled document" }, style = MaterialTheme.typography.titleLarge)
                 Text(statusLabel(document.fileStatus))
+
                 document.signers.forEach { signer ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -37,10 +57,37 @@ fun DocumentDetailDialog(document: LibreSignDocument, onDismiss: () -> Unit) {
                         )
                     }
                 }
+
+                if (document.canSignNow) {
+                    Button(
+                        onClick = onSignClick,
+                        enabled = !busy,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(if (signing) "Signing..." else "Sign document")
+                    }
+                }
+
+                OutlinedButton(
+                    onClick = onValidateClick,
+                    enabled = !busy,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(if (validating) "Validating..." else "Validation info")
+                }
+
+                OutlinedButton(
+                    onClick = onOpenFileClick,
+                    enabled = !busy,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(if (downloading) "Opening..." else "Open file")
+                }
+
+                TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
+                    Text("Close")
+                }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
         }
-    )
+    }
 }
