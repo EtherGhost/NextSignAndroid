@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -72,25 +71,22 @@ private fun DocumentRow(document: LibreSignDocument, onClick: () -> Unit) {
             .clickable(onClick = onClick)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = document.name.ifEmpty { "Untitled document" },
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false)
-                )
-                StatusBadge(fileStatus = document.fileStatus)
-            }
+            // Status badge on its own row, always left-aligned at the same position -
+            // keeping it inline next to the name put it at a different horizontal spot
+            // on every card depending on how long the name was.
+            Text(
+                text = document.name.ifEmpty { "Untitled document" },
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
             if (document.requestedBy.isNotEmpty()) {
                 Text(
                     text = "Requested by ${document.requestedBy}",
                     style = MaterialTheme.typography.bodySmall
                 )
             }
+            StatusBadge(fileStatus = document.fileStatus)
         }
     }
 }
@@ -101,6 +97,7 @@ private fun StatusBadge(fileStatus: Int) {
     val color = if (fileStatus == 3) Color(0xFF5A8F3C) else Color(0xFFB37A2A)
     Box(
         modifier = Modifier
+            .padding(top = 6.dp)
             .border(width = 1.dp, color = color, shape = RoundedCornerShape(50))
             .padding(horizontal = 8.dp, vertical = 2.dp)
     ) {

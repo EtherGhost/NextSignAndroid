@@ -37,7 +37,11 @@ data class RawSigner(
     // against a real instance in the Ubuntu Touch app.
     @SerializedName("sign_request_uuid") val signRequestUuid: String?,
     val signed: String?,
-    val visibleElements: List<RawVisibleElement>?
+    val visibleElements: List<RawVisibleElement>?,
+    // The requester's optional "Add custom message" note for this specific signer, set
+    // when the signature request was created (LibreSign web UI's "Add new signer"
+    // dialog). Confirmed against LibresignSignerDetail's real field name.
+    val description: String?
 )
 
 data class RawVisibleElement(

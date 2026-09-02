@@ -19,7 +19,10 @@ data class LibreSignDocument(
     // who hadn't signed yet went missing from a status-only filtered list.
     val canSignNow: Boolean,
     val signers: List<SignerStatus>,
-    val visibleElements: List<VisibleElementRef>
+    val visibleElements: List<VisibleElementRef>,
+    // The requester's optional note for the current signer specifically - empty if
+    // none was set, or if this account isn't a signer on this document.
+    val messageForMe: String
 )
 
 data class SignerStatus(

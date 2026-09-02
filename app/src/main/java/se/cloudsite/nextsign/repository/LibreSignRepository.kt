@@ -201,7 +201,8 @@ class LibreSignRepository(private val context: Context) {
             fileStatus = raw.status ?: -1,
             canSignNow = mySigner != null && mySigner.signed.isNullOrEmpty(),
             signers = signers,
-            visibleElements = visibleElements
+            visibleElements = visibleElements,
+            messageForMe = mySigner?.description.orEmpty()
         )
     }
 

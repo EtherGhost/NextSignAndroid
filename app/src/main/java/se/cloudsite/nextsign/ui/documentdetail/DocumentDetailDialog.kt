@@ -58,6 +58,19 @@ fun DocumentDetailDialog(
                     }
                 }
 
+                if (document.messageForMe.isNotEmpty()) {
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            Text("Message from the requester", style = MaterialTheme.typography.labelSmall)
+                            Text(document.messageForMe, style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+
                 if (document.canSignNow) {
                     Button(
                         onClick = onSignClick,
