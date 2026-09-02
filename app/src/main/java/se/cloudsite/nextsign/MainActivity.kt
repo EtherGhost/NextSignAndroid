@@ -10,6 +10,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,8 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,12 +31,14 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -69,6 +74,8 @@ import se.cloudsite.nextsign.ui.documentdetail.DocumentDetailDialog
 import se.cloudsite.nextsign.ui.documentdetail.MessageDialog
 import se.cloudsite.nextsign.ui.documentdetail.SignConfirmDialog
 import se.cloudsite.nextsign.ui.documentlist.DocumentListScreen
+import se.cloudsite.nextsign.ui.documentlist.SortMode
+import se.cloudsite.nextsign.ui.documentlist.sortDocuments
 import se.cloudsite.nextsign.ui.settings.SettingsScreen
 import se.cloudsite.nextsign.ui.signature.SignatureDrawScreen
 import se.cloudsite.nextsign.ui.signature.SignatureSetupScreen
@@ -109,6 +116,7 @@ class MainActivity : ComponentActivity() {
     private var downloadErrorMessage: String? by mutableStateOf(null)
 
     private var currentScreen: Screen by mutableStateOf(Screen.DOCUMENT_LIST)
+    private var sortMode: SortMode by mutableStateOf(SortMode.DATE_DESC)
     // { "signature": nodeId, "initial": nodeId, ... } - the account's own registered
     // signature/initials images, needed alongside a document's placeholder position to
     // render a visible mark when signing. Empty until loadSignatureElements() returns.
@@ -197,13 +205,15 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     AppScreen(
                                         account = currentAccount,
-                                        documents = documents,
+                                        documents = sortDocuments(documents, sortMode),
                                         loading = loading,
                                         errorMessage = errorMessage,
                                         selectedDocument = selectedDocument,
                                         signing = signingUuid == selectedDocument?.uuid,
                                         validating = validatingUuid == selectedDocument?.uuid,
                                         downloading = downloadingUuid == selectedDocument?.uuid,
+                                        sortMode = sortMode,
+                                        onSortModeSelected = { sortMode = it },
                                         onMenuClick = { drawerScope.launch { drawerState.open() } },
                                         onRefresh = { refresh(currentAccount) },
                                         onDocumentClick = { selectedDocumentUuid = it.uuid },
@@ -501,6 +511,33 @@ private fun buildSignatureElementsByType(elements: List<SignatureElement>): Map<
     return map
 }
 
+@Composable
+private fun SortMenuButton(sortMode: SortMode, onSortModeSelected: (SortMode) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        TextButton(onClick = { expanded = true }) {
+            Text(sortMode.label())
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            SortMode.entries.forEach { mode ->
+                DropdownMenuItem(
+                    text = { Text(mode.label()) },
+                    onClick = {
+                        expanded = false
+                        onSortModeSelected(mode)
+                    }
+                )
+            }
+        }
+    }
+}
+
+private fun SortMode.label(): String = when (this) {
+    SortMode.DATE_DESC -> "Newest first"
+    SortMode.DATE_ASC -> "Oldest first"
+    SortMode.NAME_ASC -> "Name (A-Z)"
+}
+
 private fun formatValidationSummary(summary: ValidationSummary): String {
     val lines = mutableListOf(summary.statusText.ifEmpty { "Signed" })
     summary.signers.forEach { signer ->
@@ -538,6 +575,8 @@ private fun AppScreen(
     signing: Boolean,
     validating: Boolean,
     downloading: Boolean,
+    sortMode: SortMode,
+    onSortModeSelected: (SortMode) -> Unit,
     onMenuClick: () -> Unit,
     onRefresh: () -> Unit,
     onDocumentClick: (LibreSignDocument) -> Unit,
@@ -556,6 +595,7 @@ private fun AppScreen(
                     }
                 },
                 actions = {
+                    SortMenuButton(sortMode = sortMode, onSortModeSelected = onSortModeSelected)
                     IconButton(onClick = onRefresh) {
                         Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
                     }
@@ -573,6 +613,7 @@ private fun AppScreen(
                 documents = documents,
                 loading = loading,
                 errorMessage = errorMessage,
+                onRefresh = onRefresh,
                 onDocumentClick = onDocumentClick
             )
         }

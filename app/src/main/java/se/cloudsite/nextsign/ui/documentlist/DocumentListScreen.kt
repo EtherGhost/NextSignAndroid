@@ -13,51 +13,74 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import java.time.Instant
+import java.time.OffsetDateTime
 import se.cloudsite.nextsign.model.LibreSignDocument
 import se.cloudsite.nextsign.model.statusLabel
 
+enum class SortMode { DATE_DESC, DATE_ASC, NAME_ASC }
+
+fun sortDocuments(documents: List<LibreSignDocument>, sortMode: SortMode): List<LibreSignDocument> {
+    return when (sortMode) {
+        SortMode.NAME_ASC -> documents.sortedBy { it.name.lowercase() }
+        SortMode.DATE_ASC -> documents.sortedBy { parseCreatedAt(it.createdAt) }
+        SortMode.DATE_DESC -> documents.sortedByDescending { parseCreatedAt(it.createdAt) }
+    }
+}
+
+private fun parseCreatedAt(value: String): Instant = try {
+    OffsetDateTime.parse(value).toInstant()
+} catch (e: Exception) {
+    Instant.EPOCH
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DocumentListScreen(
     documents: List<LibreSignDocument>,
     loading: Boolean,
     errorMessage: String,
+    onRefresh: () -> Unit,
     onDocumentClick: (LibreSignDocument) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        if (loading) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-        }
-
-        if (errorMessage.isNotEmpty()) {
-            Text(
-                text = errorMessage,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(16.dp)
-            )
-        }
-
-        if (!loading && documents.isEmpty() && errorMessage.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No documents yet.")
+    PullToRefreshBox(
+        isRefreshing = loading,
+        onRefresh = onRefresh,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            if (errorMessage.isNotEmpty()) {
+                Text(
+                    text = errorMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(16.dp)
+                )
             }
-        }
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(documents, key = { it.uuid }) { document ->
-                DocumentRow(document = document, onClick = { onDocumentClick(document) })
+            if (!loading && documents.isEmpty() && errorMessage.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No documents yet.")
+                }
+            }
+
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(documents, key = { it.uuid }) { document ->
+                    DocumentRow(document = document, onClick = { onDocumentClick(document) })
+                }
             }
         }
     }
