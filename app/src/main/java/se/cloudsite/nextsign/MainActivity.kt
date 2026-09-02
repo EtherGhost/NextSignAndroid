@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
@@ -170,6 +169,14 @@ class MainActivity : ComponentActivity() {
                                                 modifier = Modifier.padding(16.dp)
                                             )
                                             NavigationDrawerItem(
+                                                label = { Text("Signature") },
+                                                selected = false,
+                                                onClick = {
+                                                    drawerScope.launch { drawerState.close() }
+                                                    openSignatureSetup(currentAccount)
+                                                }
+                                            )
+                                            NavigationDrawerItem(
                                                 label = { Text("Settings") },
                                                 selected = false,
                                                 onClick = {
@@ -199,7 +206,6 @@ class MainActivity : ComponentActivity() {
                                         downloading = downloadingUuid == selectedDocument?.uuid,
                                         onMenuClick = { drawerScope.launch { drawerState.open() } },
                                         onRefresh = { refresh(currentAccount) },
-                                        onOpenSignatureSetup = { openSignatureSetup(currentAccount) },
                                         onDocumentClick = { selectedDocumentUuid = it.uuid },
                                         onDismissDetail = { selectedDocumentUuid = null },
                                         onSignClick = { document ->
@@ -534,7 +540,6 @@ private fun AppScreen(
     downloading: Boolean,
     onMenuClick: () -> Unit,
     onRefresh: () -> Unit,
-    onOpenSignatureSetup: () -> Unit,
     onDocumentClick: (LibreSignDocument) -> Unit,
     onDismissDetail: () -> Unit,
     onSignClick: (LibreSignDocument) -> Unit,
@@ -551,9 +556,6 @@ private fun AppScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onOpenSignatureSetup) {
-                        Icon(Icons.Filled.Edit, contentDescription = "Signature")
-                    }
                     IconButton(onClick = onRefresh) {
                         Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
                     }
