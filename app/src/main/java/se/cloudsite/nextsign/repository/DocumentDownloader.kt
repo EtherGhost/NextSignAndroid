@@ -46,6 +46,22 @@ class DocumentDownloader(private val context: Context) {
         )
     }
 
+    // account.userId is the bare Nextcloud login (e.g. "tobbe"), not account.name
+    // (the SSO library's own compound "tobbe@cloudsite.se" display identifier) -
+    // matches the path the Ubuntu Touch app builds (NextCommon's UrlHelpers.js
+    // avatarUrl()), confirmed against the SingleSignOnAccount class's actual fields
+    // rather than guessed.
+    fun downloadAvatar(account: SingleSignOnAccount): DownloadResult {
+        val encodedUserId = java.net.URLEncoder.encode(account.userId, "UTF-8")
+        return downloadToCache(
+            account = account,
+            path = "/index.php/avatar/$encodedUserId/64",
+            fileName = "avatar-${account.userId}.png",
+            subdir = "AvatarDownloads",
+            defaultMimeType = "image/png"
+        )
+    }
+
     private fun downloadToCache(
         account: SingleSignOnAccount,
         path: String,

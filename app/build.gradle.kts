@@ -67,5 +67,6 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.gson)
     implementation(libs.nextcloud.sso)
+    implementation(libs.unifiedpush.connector)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 }

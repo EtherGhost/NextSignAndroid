@@ -10,6 +10,7 @@ okhttp = "4.12.0"
 gson = "2.11.0"
 nextcloudSso = "1.3.4"
 desugarJdkLibs = "2.1.5"
+unifiedPush = "3.3.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -28,6 +29,7 @@ okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhtt
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 nextcloud-sso = { group = "com.github.nextcloud", name = "Android-SingleSignOn", version.ref = "nextcloudSso" }
 desugar-jdk-libs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugarJdkLibs" }
+unifiedpush-connector = { group = "org.unifiedpush.android", name = "connector", version.ref = "unifiedPush" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -11,6 +11,7 @@ import retrofit2.NextcloudRetrofitApiBuilder
 // path, which isn't declared on the LibreSignApi Retrofit interface (it's a binary
 // download, not a Gson-deserializable OCS response).
 const val LIBRESIGN_API_ENDPOINT = "/ocs/v2.php/apps/libresign/api/v1/"
+const val NOTIFICATIONS_API_ENDPOINT = "/ocs/v2.php/apps/notifications/api/v2/"
 
 // NextcloudAPI instances bind a service connection to the Nextcloud Files app and are
 // meant to stay alive as long as possible rather than being recreated per call (see
@@ -20,12 +21,21 @@ const val LIBRESIGN_API_ENDPOINT = "/ocs/v2.php/apps/libresign/api/v1/"
 object ApiProvider {
     private val nextcloudApiCache = ConcurrentHashMap<String, NextcloudAPI>()
     private val libreSignApiCache = ConcurrentHashMap<String, LibreSignApi>()
+    private val notificationsApiCache = ConcurrentHashMap<String, NotificationsApi>()
 
     @Synchronized
     fun getLibreSignApi(context: Context, ssoAccount: SingleSignOnAccount): LibreSignApi {
         return libreSignApiCache.getOrPut(ssoAccount.name) {
             NextcloudRetrofitApiBuilder(getNextcloudApi(context, ssoAccount), LIBRESIGN_API_ENDPOINT)
                 .create(LibreSignApi::class.java)
+        }
+    }
+
+    @Synchronized
+    fun getNotificationsApi(context: Context, ssoAccount: SingleSignOnAccount): NotificationsApi {
+        return notificationsApiCache.getOrPut(ssoAccount.name) {
+            NextcloudRetrofitApiBuilder(getNextcloudApi(context, ssoAccount), NOTIFICATIONS_API_ENDPOINT)
+                .create(NotificationsApi::class.java)
         }
     }
 
@@ -46,5 +56,6 @@ object ApiProvider {
     fun invalidate(ssoAccount: SingleSignOnAccount) {
         nextcloudApiCache.remove(ssoAccount.name)?.close()
         libreSignApiCache.remove(ssoAccount.name)
+        notificationsApiCache.remove(ssoAccount.name)
     }
 }

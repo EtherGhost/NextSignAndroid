@@ -1,19 +1,29 @@
 package se.cloudsite.nextsign
 
+import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
@@ -41,8 +51,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.nextcloud.android.sso.AccountImporter
@@ -58,9 +72,11 @@ import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.unifiedpush.android.connector.UnifiedPush
 import se.cloudsite.nextsign.model.LibreSignDocument
 import se.cloudsite.nextsign.model.SignatureElement
 import se.cloudsite.nextsign.model.ValidationSummary
+import se.cloudsite.nextsign.network.ApiProvider
 import se.cloudsite.nextsign.repository.DocumentDownloader
 import se.cloudsite.nextsign.repository.DownloadResult
 import se.cloudsite.nextsign.repository.LibreSignRepository
@@ -80,6 +96,7 @@ import se.cloudsite.nextsign.ui.settings.SettingsScreen
 import se.cloudsite.nextsign.ui.signature.SignatureDrawScreen
 import se.cloudsite.nextsign.ui.signature.SignatureSetupScreen
 import se.cloudsite.nextsign.ui.theme.NextSignTheme
+import se.cloudsite.nextsign.util.AccountHistory
 import se.cloudsite.nextsign.util.SignatureImageEncoder
 import se.cloudsite.nextsign.util.ThemeMode
 import se.cloudsite.nextsign.util.ThemePreference
@@ -116,11 +133,13 @@ class MainActivity : ComponentActivity() {
     private var downloadErrorMessage: String? by mutableStateOf(null)
 
     private var currentScreen: Screen by mutableStateOf(Screen.DOCUMENT_LIST)
+    private var showAccountSwitcher: Boolean by mutableStateOf(false)
     private var sortMode: SortMode by mutableStateOf(SortMode.DATE_DESC)
     // { "signature": nodeId, "initial": nodeId, ... } - the account's own registered
     // signature/initials images, needed alongside a document's placeholder position to
     // render a visible mark when signing. Empty until loadSignatureElements() returns.
     private var signatureElementsByType: Map<String, Int> by mutableStateOf(emptyMap())
+    private var avatarBitmap: Bitmap? by mutableStateOf(null)
     private var signaturePreviewBitmap: Bitmap? by mutableStateOf(null)
     private var loadingSignaturePreview: Boolean by mutableStateOf(false)
     private var savingSignatureElement: Boolean by mutableStateOf(false)
@@ -134,10 +153,19 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // Only needed for the push-notification test to show a system notification on
+    // Android 13+ (POST_NOTIFICATIONS) - the rest of the app doesn't post any.
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* result observed via ContextCompat when actually posting */ }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         themeMode = ThemePreference.get(this)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
 
         account = try {
             SingleAccountHelper.getCurrentSingleSignOnAccount(this)
@@ -146,6 +174,11 @@ class MainActivity : ComponentActivity() {
         } catch (e: NoCurrentAccountSelectedException) {
             null
         }
+        // Backfills the switcher's known-accounts list with whatever account was
+        // already active before this feature existed (or after a fresh install where
+        // the Files app already had a committed account) - otherwise it would only
+        // ever contain accounts explicitly (re-)picked after this point.
+        account?.let { AccountHistory.remember(this, it.name) }
 
         setContent {
             NextSignTheme(themeMode = themeMode) {
@@ -155,6 +188,8 @@ class MainActivity : ComponentActivity() {
                         if (currentAccount != null) {
                             refresh(currentAccount)
                             loadSignatureElements(currentAccount)
+                            loadAvatar(currentAccount)
+                            registerForPushTest(currentAccount)
                         }
                     }
 
@@ -175,6 +210,14 @@ class MainActivity : ComponentActivity() {
                                                 "NextSign",
                                                 style = MaterialTheme.typography.titleLarge,
                                                 modifier = Modifier.padding(16.dp)
+                                            )
+                                            NavigationDrawerItem(
+                                                label = { Text("Account") },
+                                                selected = false,
+                                                onClick = {
+                                                    drawerScope.launch { drawerState.close() }
+                                                    showAccountSwitcher = true
+                                                }
                                             )
                                             NavigationDrawerItem(
                                                 label = { Text("Signature") },
@@ -214,6 +257,8 @@ class MainActivity : ComponentActivity() {
                                         downloading = downloadingUuid == selectedDocument?.uuid,
                                         sortMode = sortMode,
                                         onSortModeSelected = { sortMode = it },
+                                        avatarBitmap = avatarBitmap,
+                                        onSwitchAccount = { showAccountSwitcher = true },
                                         onMenuClick = { drawerScope.launch { drawerState.open() } },
                                         onRefresh = { refresh(currentAccount) },
                                         onDocumentClick = { selectedDocumentUuid = it.uuid },
@@ -316,10 +361,57 @@ class MainActivity : ComponentActivity() {
 
                             Screen.ABOUT -> AboutScreen(onBack = { currentScreen = Screen.DOCUMENT_LIST })
                         }
+
+                        if (showAccountSwitcher) {
+                            AccountSwitcherDialog(
+                                knownAccountNames = AccountHistory.list(this@MainActivity),
+                                currentAccountName = currentAccount.name,
+                                onSelectAccount = { name ->
+                                    showAccountSwitcher = false
+                                    if (name != currentAccount.name) {
+                                        switchToKnownAccount(name)
+                                    }
+                                },
+                                onAddAccount = {
+                                    showAccountSwitcher = false
+                                    pickAccount()
+                                },
+                                onDismiss = { showAccountSwitcher = false }
+                            )
+                        }
                     }
                 }
             }
         }
+    }
+
+    // Switches to an account already approved in this app before, with no Files-app
+    // UI at all - commitCurrentAccount()/getCurrentSingleSignOnAccount() are a purely
+    // local lookup of the account's already-granted token, unlike
+    // AccountImporter.pickNewAccount(), which always re-runs the full approval flow
+    // even for an account that's already been granted. Matches the real Nextcloud
+    // Notes app's own account-switching pattern (ManageAccountsViewModel.java).
+    private fun switchToKnownAccount(accountName: String) {
+        SingleAccountHelper.commitCurrentAccount(this, accountName)
+        val newAccount = try {
+            SingleAccountHelper.getCurrentSingleSignOnAccount(this)
+        } catch (e: NextcloudFilesAppAccountNotFoundException) {
+            null
+        } catch (e: NoCurrentAccountSelectedException) {
+            null
+        }
+        if (newAccount == null) {
+            errorMessage = "Could not switch to that account."
+            return
+        }
+        ApiProvider.invalidate(newAccount)
+        documents = emptyList()
+        signatureElementsByType = emptyMap()
+        signaturePreviewBitmap = null
+        avatarBitmap = null
+        selectedDocumentUuid = null
+        errorMessage = ""
+        account = newAccount
     }
 
     private fun pickAccount() {
@@ -338,6 +430,26 @@ class MainActivity : ComponentActivity() {
         try {
             AccountImporter.onActivityResult(requestCode, resultCode, data, this) { ssoAccount ->
                 SingleAccountHelper.commitCurrentAccount(this, ssoAccount.name)
+                // ApiProvider caches NextcloudAPI/Retrofit instances keyed only by
+                // account name - if this same account was picked before (in this app
+                // process) and the Files app has since issued a fresh token for it
+                // (e.g. after being re-selected), the cached instance would still hold
+                // the old, now-mismatched token and every call would fail with
+                // TokenMismatchException. Force a fresh instance built from this
+                // specific, just-imported SingleSignOnAccount every time.
+                ApiProvider.invalidate(ssoAccount)
+                AccountHistory.remember(this, ssoAccount.name)
+                // Clear everything account-specific before switching - otherwise the
+                // previous account's documents/avatar/signature could stay visible for
+                // a moment under the new account's header, or a stale in-flight
+                // response for the old account could land after switching (guarded
+                // separately in refresh()/loadSignatureElements()/loadAvatar() below).
+                documents = emptyList()
+                signatureElementsByType = emptyMap()
+                signaturePreviewBitmap = null
+                avatarBitmap = null
+                selectedDocumentUuid = null
+                errorMessage = ""
                 account = ssoAccount
             }
         } catch (e: AccountImportCancelledException) {
@@ -354,7 +466,12 @@ class MainActivity : ComponentActivity() {
         loading = true
         errorMessage = ""
         lifecycleScope.launch {
-            when (val result = withContext(Dispatchers.IO) { repository.loadDocuments(account) }) {
+            val result = withContext(Dispatchers.IO) { repository.loadDocuments(account) }
+            // Guards against a stale response landing after the account was switched
+            // mid-flight - this.account is the currently active one, `account` is the
+            // one this specific call was made for.
+            if (account !== this@MainActivity.account) return@launch
+            when (result) {
                 is LoadDocumentsResult.Success -> {
                     documents = result.documents
                     loading = false
@@ -444,9 +561,22 @@ class MainActivity : ComponentActivity() {
 
     private fun loadSignatureElements(account: SingleSignOnAccount) {
         lifecycleScope.launch {
-            when (val result = withContext(Dispatchers.IO) { repository.loadSignatureElements(account) }) {
+            val result = withContext(Dispatchers.IO) { repository.loadSignatureElements(account) }
+            if (account !== this@MainActivity.account) return@launch
+            when (result) {
                 is SignatureElementsResult.Success -> signatureElementsByType = buildSignatureElementsByType(result.elements)
                 is SignatureElementsResult.Failure -> { /* Non-fatal - signing just won't offer a visible mark yet. */ }
+            }
+        }
+    }
+
+    private fun loadAvatar(account: SingleSignOnAccount) {
+        lifecycleScope.launch {
+            val result = withContext(Dispatchers.IO) { documentDownloader.downloadAvatar(account) }
+            if (account !== this@MainActivity.account) return@launch
+            when (result) {
+                is DownloadResult.Success -> avatarBitmap = BitmapFactory.decodeFile(result.file.path)
+                is DownloadResult.Failure -> { /* Non-fatal - falls back to the initial-letter avatar. */ }
             }
         }
     }
@@ -481,6 +611,48 @@ class MainActivity : ComponentActivity() {
         }
         signaturePreviewBitmap = SignatureImageEncoder.decodeDataUri(dataUri)
         saveSignatureElement(account, dataUri)
+    }
+
+    // Push-notification proof of concept (Tier 2 of the push notifications plan) -
+    // fetches the server's VAPID public key and registers this device with whatever
+    // UnifiedPush distributor the user has installed (e.g. ntfy). Nextcloud's own
+    // webpush handshake requires the VAPID key be passed to UnifiedPush.register()
+    // up front, matching Nextcloud Talk's real Android client rather than the lazy
+    // VAPID_REQUIRED retry shown in UnifiedPush's own generic example app - Nextcloud
+    // always requires VAPID, so there's no reason to wait for that failure first.
+    private fun registerForPushTest(account: SingleSignOnAccount) {
+        lifecycleScope.launch {
+            try {
+                val api = withContext(Dispatchers.IO) { ApiProvider.getNotificationsApi(applicationContext, account) }
+                val response = withContext(Dispatchers.IO) { api.getVapidKey().execute() }
+                val vapid = response.body()?.ocs?.data?.vapid
+                android.util.Log.i(
+                    "NextSignPush",
+                    "getVapidKey: HTTP ${response.code()}, isSuccessful=${response.isSuccessful}, " +
+                        "vapidPresent=${!vapid.isNullOrEmpty()}"
+                )
+                if (response.isSuccessful && !vapid.isNullOrEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        // saveDistributor() (here via the higher-level tryUseDefaultDistributor)
+                        // must happen before register() - confirmed from the connector library's
+                        // own source, not obvious from Talk's registration code alone, which only
+                        // calls register() because it saves the distributor separately, earlier,
+                        // from its own Settings flow.
+                        UnifiedPush.tryUseDefaultDistributor(this@MainActivity) { success ->
+                            android.util.Log.i("NextSignPush", "tryUseDefaultDistributor: success=$success")
+                            if (success) {
+                                UnifiedPush.register(this@MainActivity, instance = "default", vapid = vapid)
+                                android.util.Log.i("NextSignPush", "UnifiedPush.register() call returned")
+                            }
+                        }
+                    }
+                } else {
+                    android.util.Log.w("NextSignPush", "No VAPID key available (HTTP ${response.code()})")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("NextSignPush", "Failed to fetch VAPID key", e)
+            }
+        }
     }
 
     private fun saveSignatureElement(account: SingleSignOnAccount, dataUri: String) {
@@ -532,6 +704,73 @@ private fun SortMenuButton(sortMode: SortMode, onSortModeSelected: (SortMode) ->
     }
 }
 
+// Matches the Ubuntu Touch app's AvatarButton: the account's Nextcloud avatar image
+// if it loaded, otherwise a colored circle with the account's first initial. Tapping
+// it opens the account picker to switch accounts, same as the UT app's own top bar.
+@Composable
+private fun AccountAvatarButton(bitmap: Bitmap?, initial: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .padding(end = 12.dp)
+            .size(32.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        if (bitmap != null) {
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = "Switch account",
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            Text(initial, color = MaterialTheme.colorScheme.onPrimaryContainer)
+        }
+    }
+}
+
+// Offers instant switching between accounts already approved on this device (no
+// Files-app UI involved), plus an explicit action to approve a genuinely new one -
+// see switchToKnownAccount()/pickAccount() for why these are different flows.
+@Composable
+private fun AccountSwitcherDialog(
+    knownAccountNames: List<String>,
+    currentAccountName: String,
+    onSelectAccount: (String) -> Unit,
+    onAddAccount: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(shape = MaterialTheme.shapes.large) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Switch account", style = MaterialTheme.typography.titleLarge)
+                Spacer(modifier = Modifier.padding(top = 4.dp))
+                knownAccountNames.forEach { name ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelectAccount(name) }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(name, modifier = Modifier.weight(1f))
+                        if (name == currentAccountName) {
+                            Text("Current", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+                TextButton(onClick = onAddAccount, modifier = Modifier.fillMaxWidth()) {
+                    Text("Add another account")
+                }
+                TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
+                    Text("Close")
+                }
+            }
+        }
+    }
+}
+
 private fun SortMode.label(): String = when (this) {
     SortMode.DATE_DESC -> "Newest first"
     SortMode.DATE_ASC -> "Oldest first"
@@ -577,6 +816,8 @@ private fun AppScreen(
     downloading: Boolean,
     sortMode: SortMode,
     onSortModeSelected: (SortMode) -> Unit,
+    avatarBitmap: Bitmap?,
+    onSwitchAccount: () -> Unit,
     onMenuClick: () -> Unit,
     onRefresh: () -> Unit,
     onDocumentClick: (LibreSignDocument) -> Unit,
@@ -599,6 +840,11 @@ private fun AppScreen(
                     IconButton(onClick = onRefresh) {
                         Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
                     }
+                    AccountAvatarButton(
+                        bitmap = avatarBitmap,
+                        initial = account.userId.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
+                        onClick = onSwitchAccount
+                    )
                 }
             )
         }
