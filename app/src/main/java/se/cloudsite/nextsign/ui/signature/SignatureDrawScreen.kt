@@ -29,8 +29,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import se.cloudsite.nextsign.R
 import se.cloudsite.nextsign.util.SignatureImageEncoder
 
 // A Compose Canvas's backing bitmap is tied to its layout size, so a resize (e.g.
@@ -50,7 +52,7 @@ fun SignatureDrawScreen(onSave: (String) -> Unit, onCancel: () -> Unit) {
     val strokeWidthPx = with(LocalDensity.current) { 4.dp.toPx() }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Draw your signature", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.draw_signature_title), style = MaterialTheme.typography.headlineSmall)
 
         Box(
             // weight(1f), not a fixed height - a fixed 320.dp canvas left no room for
@@ -110,21 +112,20 @@ fun SignatureDrawScreen(onSave: (String) -> Unit, onCancel: () -> Unit) {
         }
 
         Text(
-            text = "Sign with your finger or a stylus, then tap Save. Rotating your " +
-                "device gives more room to draw.",
+            text = stringResource(R.string.draw_signature_hint),
             style = MaterialTheme.typography.bodySmall
         )
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel_button))
             }
             OutlinedButton(
                 onClick = { strokes = emptyList(); currentStroke = emptyList() },
                 enabled = strokes.isNotEmpty(),
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Clear")
+                Text(stringResource(R.string.clear_button))
             }
             Button(
                 onClick = {
@@ -138,7 +139,7 @@ fun SignatureDrawScreen(onSave: (String) -> Unit, onCancel: () -> Unit) {
                 enabled = strokes.isNotEmpty(),
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Save")
+                Text(stringResource(R.string.save_button))
             }
         }
     }

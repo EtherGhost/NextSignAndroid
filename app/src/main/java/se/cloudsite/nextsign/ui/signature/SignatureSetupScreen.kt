@@ -28,7 +28,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import se.cloudsite.nextsign.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,10 +47,10 @@ fun SignatureSetupScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Signature") },
+                title = { Text(stringResource(R.string.signature_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.back_content_description))
                     }
                 }
             )
@@ -62,11 +64,10 @@ fun SignatureSetupScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                if (hasSignature) {
-                    "You have a signature image set up. Documents with a visible signature field will use it when you sign."
-                } else {
-                    "Pick an image of your signature, or draw one. Documents with a visible signature field will use it when you sign."
-                }
+                stringResource(
+                    if (hasSignature) R.string.signature_has_signature_description
+                    else R.string.signature_no_signature_description
+                )
             )
 
             // A signature image is transparent-background ink - without an opaque
@@ -83,7 +84,7 @@ fun SignatureSetupScreen(
                     when {
                         previewBitmap != null -> Image(
                             bitmap = previewBitmap.asImageBitmap(),
-                            contentDescription = "Signature preview",
+                            contentDescription = stringResource(R.string.signature_preview_content_description),
                             modifier = Modifier.padding(16.dp)
                         )
                         loadingPreview -> CircularProgressIndicator()
@@ -96,10 +97,10 @@ fun SignatureSetupScreen(
             }
 
             Button(onClick = onDrawSignature, enabled = !saving, modifier = Modifier.fillMaxWidth()) {
-                Text(if (saving) "Saving..." else "Draw signature")
+                Text(stringResource(if (saving) R.string.saving_in_progress else R.string.draw_signature_button))
             }
             OutlinedButton(onClick = onPickImage, enabled = !saving, modifier = Modifier.fillMaxWidth()) {
-                Text(if (saving) "Saving..." else "Pick an image")
+                Text(stringResource(if (saving) R.string.saving_in_progress else R.string.pick_image_button))
             }
         }
     }

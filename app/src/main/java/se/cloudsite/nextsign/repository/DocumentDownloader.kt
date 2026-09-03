@@ -5,6 +5,7 @@ import com.nextcloud.android.sso.aidl.NextcloudRequest
 import com.nextcloud.android.sso.model.SingleSignOnAccount
 import java.io.File
 import java.io.FileOutputStream
+import se.cloudsite.nextsign.R
 import se.cloudsite.nextsign.model.LibreSignDocument
 import se.cloudsite.nextsign.network.ApiProvider
 import se.cloudsite.nextsign.network.LIBRESIGN_API_ENDPOINT
@@ -25,7 +26,7 @@ class DocumentDownloader(private val context: Context) {
 
     fun downloadDocument(account: SingleSignOnAccount, document: LibreSignDocument): DownloadResult {
         if (document.filePath.isEmpty()) {
-            return DownloadResult.Failure("This document's location is unknown.")
+            return DownloadResult.Failure(context.getString(R.string.document_location_unknown))
         }
         return downloadToCache(
             account = account,
@@ -79,7 +80,7 @@ class DocumentDownloader(private val context: Context) {
 
             val cacheDir = File(context.cacheDir, subdir)
             if (!cacheDir.exists() && !cacheDir.mkdirs()) {
-                return DownloadResult.Failure("Cache directory could not be prepared.")
+                return DownloadResult.Failure(context.getString(R.string.cache_dir_prepare_failed))
             }
 
             // Timestamp prefix only for uniqueness across repeated downloads of the
@@ -95,7 +96,7 @@ class DocumentDownloader(private val context: Context) {
 
             if (targetFile.length() == 0L) {
                 targetFile.delete()
-                return DownloadResult.Failure("The downloaded file is empty.")
+                return DownloadResult.Failure(context.getString(R.string.downloaded_file_empty))
             }
 
             val contentType = response.getPlainHeader("Content-Type")?.value

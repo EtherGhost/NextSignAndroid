@@ -1,5 +1,9 @@
 package se.cloudsite.nextsign.model
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import se.cloudsite.nextsign.R
+
 data class LibreSignDocument(
     val uuid: String,
     // sign/uuid/{signUuid} - empty if this account isn't a signer on this document.
@@ -36,9 +40,10 @@ data class VisibleElementRef(
     val type: String
 )
 
+@Composable
 fun statusLabel(fileStatus: Int): String = when (fileStatus) {
-    1 -> "Ready to sign"
-    2 -> "Partially signed"
-    3 -> "Signed"
+    1 -> stringResource(R.string.status_ready_to_sign)
+    2 -> stringResource(R.string.status_partially_signed)
+    3 -> stringResource(R.string.status_signed)
     else -> ""
 }

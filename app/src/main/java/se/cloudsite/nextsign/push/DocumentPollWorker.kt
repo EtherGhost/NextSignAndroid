@@ -13,6 +13,7 @@ import com.nextcloud.android.sso.helper.SingleAccountHelper
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import se.cloudsite.nextsign.R
 import se.cloudsite.nextsign.model.LibreSignDocument
 import se.cloudsite.nextsign.repository.LibreSignRepository
 import se.cloudsite.nextsign.repository.LoadDocumentsResult
@@ -75,8 +76,9 @@ class DocumentPollWorker(
     }
 
     private fun notifyNewDocument(document: LibreSignDocument) {
-        val name = document.name.ifEmpty { "Untitled document" }
-        LocalNotifier.show(applicationContext, "\"$name\" is ready to sign", document.uuid.hashCode())
+        val name = document.name.ifEmpty { applicationContext.getString(R.string.document_untitled) }
+        val text = applicationContext.getString(R.string.poll_new_document_notification, name)
+        LocalNotifier.show(applicationContext, text, document.uuid.hashCode())
     }
 
     companion object {

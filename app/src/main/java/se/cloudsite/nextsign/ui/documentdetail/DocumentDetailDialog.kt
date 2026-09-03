@@ -14,14 +14,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import se.cloudsite.nextsign.R
 import se.cloudsite.nextsign.model.LibreSignDocument
 import se.cloudsite.nextsign.model.statusLabel
 
-// A custom Dialog rather than AlertDialog's fixed confirm/dismiss button pair - this
-// needs up to four actions (Sign, Validation info, Open file, Close), mirroring the
-// Ubuntu Touch app's own detail popup's stacked-button layout.
 @Composable
 fun DocumentDetailDialog(
     document: LibreSignDocument,
@@ -41,7 +40,10 @@ fun DocumentDetailDialog(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(document.name.ifEmpty { "Untitled document" }, style = MaterialTheme.typography.titleLarge)
+                Text(
+                    document.name.ifEmpty { stringResource(R.string.document_untitled) },
+                    style = MaterialTheme.typography.titleLarge
+                )
                 Text(statusLabel(document.fileStatus))
 
                 document.signers.forEach { signer ->
@@ -49,10 +51,10 @@ fun DocumentDetailDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(signer.displayName.ifEmpty { "Unknown signer" })
+                        Text(signer.displayName.ifEmpty { stringResource(R.string.document_unknown_signer) })
                         val hasSigned = signer.signed.isNotEmpty()
                         Text(
-                            text = if (hasSigned) "Signed" else "Ready to sign",
+                            text = if (hasSigned) stringResource(R.string.status_signed) else stringResource(R.string.status_ready_to_sign),
                             color = if (hasSigned) Color(0xFF5A8F3C) else Color(0xFFB37A2A)
                         )
                     }
@@ -65,7 +67,10 @@ fun DocumentDetailDialog(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(8.dp)) {
-                            Text("Message from the requester", style = MaterialTheme.typography.labelSmall)
+                            Text(
+                                stringResource(R.string.document_message_from_requester),
+                                style = MaterialTheme.typography.labelSmall
+                            )
                             Text(document.messageForMe, style = MaterialTheme.typography.bodyMedium)
                         }
                     }
@@ -77,7 +82,7 @@ fun DocumentDetailDialog(
                         enabled = !busy,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(if (signing) "Signing..." else "Sign document")
+                        Text(stringResource(if (signing) R.string.signing_in_progress else R.string.sign_document_button))
                     }
                 }
 
@@ -86,7 +91,7 @@ fun DocumentDetailDialog(
                     enabled = !busy,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(if (validating) "Validating..." else "Validation info")
+                    Text(stringResource(if (validating) R.string.validating_in_progress else R.string.validation_info_button))
                 }
 
                 OutlinedButton(
@@ -94,11 +99,11 @@ fun DocumentDetailDialog(
                     enabled = !busy,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(if (downloading) "Opening..." else "Open file")
+                    Text(stringResource(if (downloading) R.string.opening_in_progress else R.string.open_file_button))
                 }
 
                 TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
-                    Text("Close")
+                    Text(stringResource(R.string.close_button))
                 }
             }
         }

@@ -22,7 +22,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import se.cloudsite.nextsign.R
 import se.cloudsite.nextsign.util.NotificationMode
 import se.cloudsite.nextsign.util.ThemeMode
 
@@ -40,10 +42,10 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text(stringResource(R.string.settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.back_content_description))
                     }
                 }
             )
@@ -53,45 +55,43 @@ fun SettingsScreen(
             modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text("Theme", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.settings_theme), style = MaterialTheme.typography.titleMedium)
 
             ThemeOption(
-                label = "Follow system",
+                label = stringResource(R.string.theme_follow_system),
                 selected = themeMode == ThemeMode.SYSTEM,
                 onClick = { onThemeModeSelected(ThemeMode.SYSTEM) }
             )
             ThemeOption(
-                label = "Light",
+                label = stringResource(R.string.theme_light),
                 selected = themeMode == ThemeMode.LIGHT,
                 onClick = { onThemeModeSelected(ThemeMode.LIGHT) }
             )
             ThemeOption(
-                label = "Dark",
+                label = stringResource(R.string.theme_dark),
                 selected = themeMode == ThemeMode.DARK,
                 onClick = { onThemeModeSelected(ThemeMode.DARK) }
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
-            Text("Notifications", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.settings_notifications), style = MaterialTheme.typography.titleMedium)
 
             NotificationOption(
-                label = "Off",
-                description = "No notifications about documents to sign.",
+                label = stringResource(R.string.notification_off_label),
+                description = stringResource(R.string.notification_off_description),
                 selected = notificationMode == NotificationMode.OFF,
                 onClick = { onNotificationModeSelected(NotificationMode.OFF) }
             )
             NotificationOption(
-                label = "Background check",
-                description = "Checks periodically (roughly every 15 minutes or so) - " +
-                    "no extra app needed.",
+                label = stringResource(R.string.notification_background_label),
+                description = stringResource(R.string.notification_background_description),
                 selected = notificationMode == NotificationMode.BACKGROUND_ONLY,
                 onClick = { onNotificationModeSelected(NotificationMode.BACKGROUND_ONLY) }
             )
             NotificationOption(
-                label = "Instant",
-                description = "Notified right away when a document needs your " +
-                    "signature - needs a small helper app installed (see below).",
+                label = stringResource(R.string.notification_instant_label),
+                description = stringResource(R.string.notification_instant_description),
                 selected = notificationMode == NotificationMode.INSTANT,
                 onClick = { onNotificationModeSelected(NotificationMode.INSTANT) }
             )
@@ -99,8 +99,7 @@ fun SettingsScreen(
             if (notificationMode == NotificationMode.INSTANT) {
                 if (hasPushDistributor) {
                     Text(
-                        "You'll be notified as soon as a document needs your " +
-                            "signature, with the background check as a backup.",
+                        stringResource(R.string.notification_instant_active),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 40.dp, top = 4.dp)
@@ -113,10 +112,7 @@ fun SettingsScreen(
                     // than notifications just silently arriving late with no
                     // explanation.
                     Text(
-                        "Install a small free helper app called \"ntfy\" for instant " +
-                            "delivery - it needs no account or setup, just install it " +
-                            "and come back here. Until then, the background check " +
-                            "still covers you.",
+                        stringResource(R.string.notification_instant_guidance),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 40.dp, top = 4.dp)
@@ -125,7 +121,7 @@ fun SettingsScreen(
                         onClick = onInstallPushHelper,
                         modifier = Modifier.padding(start = 40.dp, top = 4.dp)
                     ) {
-                        Text("Install ntfy")
+                        Text(stringResource(R.string.install_ntfy_button))
                     }
                 }
             }

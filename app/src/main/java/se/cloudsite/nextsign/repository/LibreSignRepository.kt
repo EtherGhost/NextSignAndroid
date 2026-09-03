@@ -1,8 +1,10 @@
 package se.cloudsite.nextsign.repository
 
 import android.content.Context
+import androidx.annotation.StringRes
 import com.nextcloud.android.sso.model.SingleSignOnAccount
 import retrofit2.Response
+import se.cloudsite.nextsign.R
 import se.cloudsite.nextsign.model.LibreSignDocument
 import se.cloudsite.nextsign.model.SignatureElement
 import se.cloudsite.nextsign.model.SignerStatus
@@ -55,7 +57,7 @@ class LibreSignRepository(private val context: Context) {
             val api = ApiProvider.getLibreSignApi(context, account)
             val response = api.listFiles().execute()
             if (!response.isSuccessful) {
-                return LoadDocumentsResult.Failure(errorMessage(response, "LibreSign request"))
+                return LoadDocumentsResult.Failure(errorMessage(response, R.string.action_libresign_request))
             }
             val rawFiles = response.body()?.ocs?.data?.data.orEmpty()
             LoadDocumentsResult.Success(rawFiles.mapNotNull { mapDocument(it) })
@@ -83,7 +85,7 @@ class LibreSignRepository(private val context: Context) {
             }
             val response = api.signDocument(signUuid, SignRequestBody(elements = elements)).execute()
             if (!response.isSuccessful) {
-                return SignResult.Failure(errorMessage(response, "Signing"))
+                return SignResult.Failure(errorMessage(response, R.string.action_signing))
             }
             SignResult.Success
         } catch (e: Exception) {
@@ -96,11 +98,11 @@ class LibreSignRepository(private val context: Context) {
             val api = ApiProvider.getLibreSignApi(context, account)
             val response = api.validateFile(uuid).execute()
             if (!response.isSuccessful) {
-                return ValidateResult.Failure(errorMessage(response, "Validation"))
+                return ValidateResult.Failure(errorMessage(response, R.string.action_validation))
             }
             val data = response.body()?.ocs?.data
             if (data == null) {
-                return ValidateResult.Failure("LibreSign returned an unexpected response.")
+                return ValidateResult.Failure(context.getString(R.string.libresign_unexpected_response))
             }
             ValidateResult.Success(
                 ValidationSummary(
@@ -125,7 +127,7 @@ class LibreSignRepository(private val context: Context) {
             val api = ApiProvider.getLibreSignApi(context, account)
             val response = api.getSignatureElements().execute()
             if (!response.isSuccessful) {
-                return SignatureElementsResult.Failure(errorMessage(response, "LibreSign request"))
+                return SignatureElementsResult.Failure(errorMessage(response, R.string.action_libresign_request))
             }
             val rawElements = response.body()?.ocs?.data?.elements.orEmpty()
             SignatureElementsResult.Success(rawElements.mapNotNull { mapSignatureElement(it) })
@@ -159,7 +161,7 @@ class LibreSignRepository(private val context: Context) {
                 ).execute()
             }
             if (!response.isSuccessful) {
-                return SaveSignatureElementResult.Failure(errorMessage(response, "Saving your signature"))
+                return SaveSignatureElementResult.Failure(errorMessage(response, R.string.action_saving_signature))
             }
             val rawElements = response.body()?.ocs?.data?.elements.orEmpty()
             SaveSignatureElementResult.Success(rawElements.mapNotNull { mapSignatureElement(it) })
@@ -216,9 +218,9 @@ class LibreSignRepository(private val context: Context) {
     // response body, this app can only reliably report the HTTP status code - the
     // errorBody() text is included as a best-effort detail, but it's the generic
     // exception message, not LibreSign's own validation message.
-    private fun <T> errorMessage(response: Response<T>, action: String): String {
+    private fun <T> errorMessage(response: Response<T>, @StringRes actionRes: Int): String {
         val detail = response.errorBody()?.string().orEmpty()
-        val base = "$action failed with HTTP ${response.code()}."
+        val base = context.getString(R.string.error_action_failed_http, context.getString(actionRes), response.code())
         return if (detail.isNotBlank()) "$base\n\n$detail" else base
     }
 }

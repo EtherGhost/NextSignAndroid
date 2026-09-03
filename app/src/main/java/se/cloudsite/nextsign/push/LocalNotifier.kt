@@ -43,7 +43,7 @@ object LocalNotifier {
         )
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("NextSign")
+            .setContentTitle(context.getString(R.string.app_name))
             .setContentText(text.take(200))
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -58,7 +58,11 @@ object LocalNotifier {
             val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             if (manager.getNotificationChannel(CHANNEL_ID) == null) {
                 manager.createNotificationChannel(
-                    NotificationChannel(CHANNEL_ID, "Notifications", NotificationManager.IMPORTANCE_HIGH)
+                    NotificationChannel(
+                        CHANNEL_ID,
+                        context.getString(R.string.notification_channel_name),
+                        NotificationManager.IMPORTANCE_HIGH
+                    )
                 )
             }
         }

@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import se.cloudsite.nextsign.BuildConfig
@@ -42,10 +43,10 @@ fun AboutScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("About") },
+                title = { Text(stringResource(R.string.about_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.back_content_description))
                     }
                 }
             )
@@ -80,45 +81,44 @@ fun AboutScreen(onBack: () -> Unit) {
                 )
             }
 
-            Text("NextSign", style = MaterialTheme.typography.headlineMedium)
+            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium)
 
             Text(
-                "Version ${BuildConfig.VERSION_NAME}",
+                stringResource(R.string.about_version, BuildConfig.VERSION_NAME),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Text(
-                "A native Android client for LibreSign, the electronic signature app for " +
-                    "Nextcloud. It does not prepare documents or place signature fields - " +
-                    "that happens elsewhere. NextSign shows what is waiting for your " +
-                    "signature and signs it with a tap using LibreSign's click-to-sign method.",
+                stringResource(R.string.about_description),
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
 
             HorizontalDivider(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp))
 
+            // License/Disclaimer text stays English-only in every language (legal/
+            // attribution content, not general UI text) - see the translatable="false"
+            // keys in values/strings.xml, matching the Ubuntu Touch app's own convention.
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("License", style = MaterialTheme.typography.titleMedium)
-                Text("NextSign is licensed under the MIT License.")
+                Text(stringResource(R.string.about_license_title), style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.about_license_text))
                 Text(
-                    "Copyright (c) 2026 Etherghost",
+                    stringResource(R.string.about_copyright),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Disclaimer", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.about_disclaimer_title), style = MaterialTheme.typography.titleMedium)
                 // The "hobby project, no support" and "use at your own risk" framing
                 // stays in the GitHub README only, not here - the About screen is for
                 // the average paying user asking "does this work, who do I contact,"
                 // not a support-model disclaimer. Only the trademark/affiliation
                 // disclaimer belongs on-screen. Do not restore the removed lines here.
                 Text(
-                    "Not affiliated with, endorsed by, or supported by Nextcloud GmbH, " +
-                        "the Nextcloud project, or the LibreSign project.",
+                    stringResource(R.string.about_disclaimer_text),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

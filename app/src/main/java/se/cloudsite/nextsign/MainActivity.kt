@@ -56,6 +56,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.FileProvider
@@ -231,12 +232,12 @@ class MainActivity : ComponentActivity() {
                                     drawerContent = {
                                         ModalDrawerSheet {
                                             Text(
-                                                "NextSign",
+                                                stringResource(R.string.app_name),
                                                 style = MaterialTheme.typography.titleLarge,
                                                 modifier = Modifier.padding(16.dp)
                                             )
                                             NavigationDrawerItem(
-                                                label = { Text("Account") },
+                                                label = { Text(stringResource(R.string.drawer_account)) },
                                                 selected = false,
                                                 onClick = {
                                                     drawerScope.launch { drawerState.close() }
@@ -244,7 +245,7 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             )
                                             NavigationDrawerItem(
-                                                label = { Text("Signature") },
+                                                label = { Text(stringResource(R.string.drawer_signature)) },
                                                 selected = false,
                                                 onClick = {
                                                     drawerScope.launch { drawerState.close() }
@@ -252,7 +253,7 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             )
                                             NavigationDrawerItem(
-                                                label = { Text("Settings") },
+                                                label = { Text(stringResource(R.string.drawer_settings)) },
                                                 selected = false,
                                                 onClick = {
                                                     drawerScope.launch { drawerState.close() }
@@ -260,7 +261,7 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             )
                                             NavigationDrawerItem(
-                                                label = { Text("About") },
+                                                label = { Text(stringResource(R.string.drawer_about)) },
                                                 selected = false,
                                                 onClick = {
                                                     drawerScope.launch { drawerState.close() }
@@ -315,15 +316,18 @@ class MainActivity : ComponentActivity() {
 
                                 signSucceededName?.let { name ->
                                     MessageDialog(
-                                        title = "Signed",
-                                        message = "\"${name.ifEmpty { "Untitled document" }}\" has been signed.",
+                                        title = stringResource(R.string.signed_dialog_title),
+                                        message = stringResource(
+                                            R.string.signed_dialog_message,
+                                            name.ifEmpty { stringResource(R.string.document_untitled) }
+                                        ),
                                         onDismiss = { signSucceededName = null }
                                     )
                                 }
 
                                 signErrorMessage?.let { message ->
                                     MessageDialog(
-                                        title = "Could not sign document",
+                                        title = stringResource(R.string.sign_error_dialog_title),
                                         message = message,
                                         onDismiss = { signErrorMessage = null }
                                     )
@@ -331,7 +335,7 @@ class MainActivity : ComponentActivity() {
 
                                 validationResult?.let { summary ->
                                     MessageDialog(
-                                        title = "Signature validation",
+                                        title = stringResource(R.string.validation_result_dialog_title),
                                         message = formatValidationSummary(summary),
                                         onDismiss = { validationResult = null }
                                     )
@@ -339,7 +343,7 @@ class MainActivity : ComponentActivity() {
 
                                 validationErrorMessage?.let { message ->
                                     MessageDialog(
-                                        title = "Could not validate document",
+                                        title = stringResource(R.string.validation_error_dialog_title),
                                         message = message,
                                         onDismiss = { validationErrorMessage = null }
                                     )
@@ -347,7 +351,7 @@ class MainActivity : ComponentActivity() {
 
                                 downloadErrorMessage?.let { message ->
                                     MessageDialog(
-                                        title = "Could not open document",
+                                        title = stringResource(R.string.open_file_error_dialog_title),
                                         message = message,
                                         onDismiss = { downloadErrorMessage = null }
                                     )
@@ -434,7 +438,7 @@ class MainActivity : ComponentActivity() {
             null
         }
         if (newAccount == null) {
-            errorMessage = "Could not switch to that account."
+            errorMessage = getString(R.string.account_switch_failed)
             return
         }
         if (notificationMode == NotificationMode.INSTANT && previousAccount != null && previousAccount.name != newAccount.name) {
@@ -467,8 +471,7 @@ class MainActivity : ComponentActivity() {
             // immediately on one without it (this path always ran, straight into the
             // theme-mismatch exception). Plain Compose state instead, same as every
             // other error message in this app.
-            signInErrorMessage = "The Nextcloud app is required to sign in. Install it " +
-                "from the Play Store, set up your account there, then try again."
+            signInErrorMessage = getString(R.string.sign_in_error_no_nextcloud)
             showInstallNextcloudButton = true
         } catch (e: AndroidGetAccountsPermissionNotGranted) {
             AccountImporter.requestAndroidAccountPermissionsAndPickAccount(this)
@@ -480,12 +483,11 @@ class MainActivity : ComponentActivity() {
             // (confirmed via the library's real source, not guessed), it throws this
             // completely uncaught, crashing the app. Real crash report: worked on one
             // phone, crashed on another.
-            signInErrorMessage = "Could not open the account picker. Make sure the " +
-                "Nextcloud app is installed and set up on this device."
+            signInErrorMessage = getString(R.string.sign_in_error_picker_failed)
         } catch (e: Exception) {
             // Catch-all so an unexpected failure here shows a message instead of
             // crashing - this is the very first thing a new user does with the app.
-            signInErrorMessage = "Could not start Nextcloud sign-in: ${e.message ?: e.toString()}"
+            signInErrorMessage = getString(R.string.sign_in_error_generic, e.message ?: e.toString())
         }
     }
 
@@ -522,7 +524,7 @@ class MainActivity : ComponentActivity() {
                 account = ssoAccount
             }
         } catch (e: AccountImportCancelledException) {
-            errorMessage = "Account import canceled."
+            errorMessage = getString(R.string.account_import_canceled)
         }
     }
 
@@ -590,7 +592,7 @@ class MainActivity : ComponentActivity() {
 
     private fun signDocument(account: SingleSignOnAccount, document: LibreSignDocument) {
         if (document.signUuid.isEmpty()) {
-            signErrorMessage = "Could not determine your signature request for this document."
+            signErrorMessage = getString(R.string.sign_error_no_sign_uuid)
             return
         }
         signingUuid = document.uuid
@@ -640,9 +642,9 @@ class MainActivity : ComponentActivity() {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         try {
-            startActivity(Intent.createChooser(intent, "Open with"))
+            startActivity(Intent.createChooser(intent, getString(R.string.open_with_chooser_title)))
         } catch (e: ActivityNotFoundException) {
-            downloadErrorMessage = "No app installed can open this document."
+            downloadErrorMessage = getString(R.string.open_file_no_app)
         }
     }
 
@@ -693,7 +695,7 @@ class MainActivity : ComponentActivity() {
         val account = this.account ?: return
         val dataUri = SignatureImageEncoder.toBase64DataUri(applicationContext, uri)
         if (dataUri == null) {
-            signatureSetupError = "Could not use the selected image. Try a smaller picture."
+            signatureSetupError = getString(R.string.signature_setup_error_bad_image)
             return
         }
         signaturePreviewBitmap = SignatureImageEncoder.decodeDataUri(dataUri)
@@ -855,7 +857,7 @@ private fun AccountAvatarButton(bitmap: Bitmap?, initial: String, onClick: () ->
         if (bitmap != null) {
             Image(
                 bitmap = bitmap.asImageBitmap(),
-                contentDescription = "Switch account",
+                contentDescription = stringResource(R.string.switch_account_content_description),
                 modifier = Modifier.fillMaxSize()
             )
         } else {
@@ -878,7 +880,7 @@ private fun AccountSwitcherDialog(
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = MaterialTheme.shapes.large) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Switch account", style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.account_switcher_title), style = MaterialTheme.typography.titleLarge)
                 Spacer(modifier = Modifier.padding(top = 4.dp))
                 knownAccountNames.forEach { name ->
                     Row(
@@ -890,32 +892,34 @@ private fun AccountSwitcherDialog(
                     ) {
                         Text(name, modifier = Modifier.weight(1f))
                         if (name == currentAccountName) {
-                            Text("Current", style = MaterialTheme.typography.labelSmall)
+                            Text(stringResource(R.string.account_switcher_current), style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
                 TextButton(onClick = onAddAccount, modifier = Modifier.fillMaxWidth()) {
-                    Text("Add another account")
+                    Text(stringResource(R.string.account_switcher_add_account))
                 }
                 TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
-                    Text("Close")
+                    Text(stringResource(R.string.close_button))
                 }
             }
         }
     }
 }
 
+@Composable
 private fun SortMode.label(): String = when (this) {
-    SortMode.DATE_DESC -> "Newest first"
-    SortMode.DATE_ASC -> "Oldest first"
-    SortMode.NAME_ASC -> "Name (A-Z)"
+    SortMode.DATE_DESC -> stringResource(R.string.sort_newest_first)
+    SortMode.DATE_ASC -> stringResource(R.string.sort_oldest_first)
+    SortMode.NAME_ASC -> stringResource(R.string.sort_name_asc)
 }
 
+@Composable
 private fun formatValidationSummary(summary: ValidationSummary): String {
-    val lines = mutableListOf(summary.statusText.ifEmpty { "Signed" })
+    val lines = mutableListOf(summary.statusText.ifEmpty { stringResource(R.string.status_signed) })
     summary.signers.forEach { signer ->
         lines.add("")
-        lines.add(signer.displayName.ifEmpty { "Unknown signer" })
+        lines.add(signer.displayName.ifEmpty { stringResource(R.string.document_unknown_signer) })
         if (signer.signatureLabel.isNotEmpty()) lines.add(signer.signatureLabel)
         if (signer.certificateLabel.isNotEmpty()) lines.add(signer.certificateLabel)
     }
@@ -935,16 +939,16 @@ private fun SignInScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(text = "NextSign", style = MaterialTheme.typography.headlineMedium)
+        Text(text = stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium)
         Button(onClick = onSignIn) {
-            Text("Sign in with Nextcloud")
+            Text(stringResource(R.string.sign_in_button))
         }
         if (errorMessage.isNotEmpty()) {
             Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
         }
         if (showInstallNextcloudButton) {
             OutlinedButton(onClick = onInstallNextcloud) {
-                Text("Install Nextcloud")
+                Text(stringResource(R.string.install_nextcloud_button))
             }
         }
     }
@@ -1001,16 +1005,16 @@ private fun AppScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("NextSign") },
+                title = { Text(stringResource(R.string.app_name)) },
                 navigationIcon = {
                     IconButton(onClick = onMenuClick) {
-                        Icon(Icons.Filled.Menu, contentDescription = "Menu")
+                        Icon(Icons.Filled.Menu, contentDescription = stringResource(R.string.menu_content_description))
                     }
                 },
                 actions = {
                     SortMenuButton(sortMode = sortMode, onSortModeSelected = onSortModeSelected)
                     IconButton(onClick = onRefresh) {
-                        Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
+                        Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.refresh_content_description))
                     }
                     AccountAvatarButton(
                         bitmap = avatarBitmap,
@@ -1023,7 +1027,7 @@ private fun AppScreen(
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
             Text(
-                text = "Signed in as ${account.name}",
+                text = stringResource(R.string.signed_in_as, account.name),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
             )

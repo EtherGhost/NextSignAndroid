@@ -4,6 +4,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import se.cloudsite.nextsign.R
 
 @Composable
 fun MessageDialog(title: String, message: String, onDismiss: () -> Unit) {
@@ -12,7 +14,7 @@ fun MessageDialog(title: String, message: String, onDismiss: () -> Unit) {
         title = { Text(title) },
         text = { Text(message) },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.close_button)) }
         }
     )
 }

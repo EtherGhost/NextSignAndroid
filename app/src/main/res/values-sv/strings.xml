@@ -1,0 +1,112 @@
+<resources>
+    <!-- Deliberately no about_license_*/about_disclaimer_* entries here - see the
+         comment in values/strings.xml. Falls back to the English default. -->
+
+    <string name="sign_in_button">Logga in med Nextcloud</string>
+    <string name="sign_in_error_no_nextcloud">Nextcloud-appen krävs för att logga in. Installera den från Play Butik, konfigurera ditt konto där och försök sedan igen.</string>
+    <string name="sign_in_error_picker_failed">Kunde inte öppna kontoväljaren. Kontrollera att Nextcloud-appen är installerad och konfigurerad på den här enheten.</string>
+    <string name="sign_in_error_generic">Kunde inte starta Nextcloud-inloggning: %1$s</string>
+    <string name="install_nextcloud_button">Installera Nextcloud</string>
+    <string name="account_import_canceled">Kontoimporten avbröts.</string>
+    <string name="account_switch_failed">Kunde inte växla till det kontot.</string>
+
+    <string name="drawer_account">Konto</string>
+    <string name="drawer_signature">Signatur</string>
+    <string name="drawer_settings">Inställningar</string>
+    <string name="drawer_about">Om</string>
+    <string name="menu_content_description">Meny</string>
+
+    <string name="refresh_content_description">Uppdatera</string>
+    <string name="signed_in_as">Inloggad som %1$s</string>
+    <string name="switch_account_content_description">Växla konto</string>
+
+    <string name="sort_newest_first">Nyast först</string>
+    <string name="sort_oldest_first">Äldst först</string>
+    <string name="sort_name_asc">Namn (A-Ö)</string>
+
+    <string name="account_switcher_title">Växla konto</string>
+    <string name="account_switcher_current">Aktuellt</string>
+    <string name="account_switcher_add_account">Lägg till ett till konto</string>
+
+    <string name="close_button">Stäng</string>
+    <string name="back_content_description">Tillbaka</string>
+    <string name="cancel_button">Avbryt</string>
+
+    <string name="document_list_empty">Inga dokument än.</string>
+    <string name="document_untitled">Namnlöst dokument</string>
+    <string name="document_requested_by">Begärt av %1$s</string>
+
+    <string name="status_ready_to_sign">Redo att signera</string>
+    <string name="status_partially_signed">Delvis signerat</string>
+    <string name="status_signed">Signerat</string>
+
+    <string name="document_unknown_signer">Okänd signerare</string>
+    <string name="document_message_from_requester">Meddelande från beställaren</string>
+    <string name="sign_document_button">Signera dokument</string>
+    <string name="signing_in_progress">Signerar…</string>
+    <string name="validation_info_button">Valideringsinfo</string>
+    <string name="validating_in_progress">Validerar…</string>
+    <string name="open_file_button">Öppna fil</string>
+    <string name="opening_in_progress">Öppnar…</string>
+    <string name="open_with_chooser_title">Öppna med</string>
+
+    <string name="sign_confirm_title">Signera det här dokumentet?</string>
+    <string name="sign_confirm_message">Detta signerar \"%1$s\" med LibreSigns click-to-sign-metod. Detta kan inte ångras.</string>
+    <string name="sign_button">Signera</string>
+
+    <string name="signed_dialog_title">Signerat</string>
+    <string name="signed_dialog_message">\"%1$s\" har signerats.</string>
+    <string name="sign_error_dialog_title">Kunde inte signera dokumentet</string>
+    <string name="validation_result_dialog_title">Signaturvalidering</string>
+    <string name="validation_error_dialog_title">Kunde inte validera dokumentet</string>
+    <string name="open_file_error_dialog_title">Kunde inte öppna dokumentet</string>
+    <string name="sign_error_no_sign_uuid">Kunde inte fastställa din signaturbegäran för det här dokumentet.</string>
+    <string name="open_file_no_app">Ingen installerad app kan öppna det här dokumentet.</string>
+
+    <string name="settings_title">Inställningar</string>
+    <string name="settings_theme">Tema</string>
+    <string name="theme_follow_system">Följ systemet</string>
+    <string name="theme_light">Ljust</string>
+    <string name="theme_dark">Mörkt</string>
+    <string name="settings_notifications">Aviseringar</string>
+    <string name="notification_off_label">Av</string>
+    <string name="notification_off_description">Inga aviseringar om dokument att signera.</string>
+    <string name="notification_background_label">Bakgrundskontroll</string>
+    <string name="notification_background_description">Kontrollerar med jämna mellanrum (ungefär var 15:e minut) - ingen extra app behövs.</string>
+    <string name="notification_instant_label">Direkt</string>
+    <string name="notification_instant_description">Avisering direkt när ett dokument behöver din signatur - kräver en liten hjälpapp installerad (se nedan).</string>
+    <string name="notification_instant_active">Du får en avisering så snart ett dokument behöver din signatur, med bakgrundskontrollen som säkerhet.</string>
+    <string name="notification_instant_guidance">Installera en liten gratis hjälpapp som heter \"ntfy\" för direktleverans - den behöver inget konto eller någon konfiguration, installera den bara och kom tillbaka hit. Fram tills dess täcker bakgrundskontrollen fortfarande upp dig.</string>
+    <string name="install_ntfy_button">Installera ntfy</string>
+
+    <string name="about_title">Om</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_description">En native Android-klient för LibreSign, e-signaturappen för Nextcloud. Den förbereder inte dokument eller placerar signaturfält - det sker någon annanstans. NextSign visar vad som väntar på din signatur och signerar det med ett tryck med LibreSigns click-to-sign-metod.</string>
+
+    <string name="signature_title">Signatur</string>
+    <string name="signature_has_signature_description">Du har en signaturbild inställd. Dokument med ett synligt signaturfält kommer att använda den när du signerar.</string>
+    <string name="signature_no_signature_description">Välj en bild av din signatur, eller rita en. Dokument med ett synligt signaturfält kommer att använda den när du signerar.</string>
+    <string name="signature_preview_content_description">Signaturförhandsvisning</string>
+    <string name="draw_signature_button">Rita signatur</string>
+    <string name="saving_in_progress">Sparar…</string>
+    <string name="pick_image_button">Välj en bild</string>
+    <string name="signature_setup_error_bad_image">Kunde inte använda den valda bilden. Prova en mindre bild.</string>
+
+    <string name="draw_signature_title">Rita din signatur</string>
+    <string name="draw_signature_hint">Signera med fingret eller en penna, tryck sedan på Spara. Om du roterar enheten får du mer utrymme att rita på.</string>
+    <string name="clear_button">Rensa</string>
+    <string name="save_button">Spara</string>
+
+    <string name="document_location_unknown">Det här dokumentets plats är okänd.</string>
+    <string name="cache_dir_prepare_failed">Cachekatalogen kunde inte förberedas.</string>
+    <string name="downloaded_file_empty">Den nedladdade filen är tom.</string>
+    <string name="libresign_unexpected_response">LibreSign returnerade ett oväntat svar.</string>
+    <string name="action_libresign_request">LibreSign-begäran</string>
+    <string name="action_signing">Signering</string>
+    <string name="action_validation">Validering</string>
+    <string name="action_saving_signature">Sparande av din signatur</string>
+    <string name="error_action_failed_http">%1$s misslyckades med HTTP %2$d.</string>
+
+    <string name="notification_channel_name">Aviseringar</string>
+    <string name="poll_new_document_notification">\"%1$s\" är redo att signeras</string>
+</resources>

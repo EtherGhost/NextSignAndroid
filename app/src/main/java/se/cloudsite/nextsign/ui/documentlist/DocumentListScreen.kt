@@ -21,10 +21,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import java.time.Instant
 import java.time.OffsetDateTime
+import se.cloudsite.nextsign.R
 import se.cloudsite.nextsign.model.LibreSignDocument
 import se.cloudsite.nextsign.model.statusLabel
 
@@ -69,7 +71,7 @@ fun DocumentListScreen(
 
             if (!loading && documents.isEmpty() && errorMessage.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No documents yet.")
+                    Text(stringResource(R.string.document_list_empty))
                 }
             }
 
@@ -98,14 +100,14 @@ private fun DocumentRow(document: LibreSignDocument, onClick: () -> Unit) {
             // keeping it inline next to the name put it at a different horizontal spot
             // on every card depending on how long the name was.
             Text(
-                text = document.name.ifEmpty { "Untitled document" },
+                text = document.name.ifEmpty { stringResource(R.string.document_untitled) },
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             if (document.requestedBy.isNotEmpty()) {
                 Text(
-                    text = "Requested by ${document.requestedBy}",
+                    text = stringResource(R.string.document_requested_by, document.requestedBy),
                     style = MaterialTheme.typography.bodySmall
                 )
             }
