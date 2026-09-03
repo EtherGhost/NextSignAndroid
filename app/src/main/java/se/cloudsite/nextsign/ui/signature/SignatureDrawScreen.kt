@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -34,19 +33,19 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import se.cloudsite.nextsign.util.SignatureImageEncoder
 
-// A Compose Canvas's backing bitmap is tied to its layout size - unlike the Ubuntu
-// Touch app's QML Canvas (which stretches existing pixel content non-uniformly on
-// resize), this screen never stores rendered pixels mid-draw, only stroke point data,
-// so a resize (e.g. rotating the device) can't distort anything already drawn. What it
-// CAN'T do safely is keep drawing in the old coordinate space after a resize, so
-// strokes are still cleared on a size change while mid-drawing, matching the ported
-// app's own fix for this - just for a different underlying reason.
+// A Compose Canvas's backing bitmap is tied to its layout size, so a resize (e.g.
+// rotating the device) invalidates the old coordinate space. Unlike the Ubuntu Touch
+// app's QML Canvas (which stretches its existing rendered pixels non-uniformly on
+// resize, distorting the signature) or an earlier version of this screen (which just
+// cleared the drawing on resize), this rescales the stored stroke points
+// proportionally to the new size on every resize - safe to do because only vector
+// point data is stored while drawing, never a rasterized bitmap, so the signature
+// survives rotation intact instead of being stretched or lost.
 @Composable
 fun SignatureDrawScreen(onSave: (String) -> Unit, onCancel: () -> Unit) {
     var strokes by remember { mutableStateOf<List<List<Offset>>>(emptyList()) }
     var currentStroke by remember { mutableStateOf<List<Offset>>(emptyList()) }
     var canvasSize by remember { mutableStateOf(IntSize.Zero) }
-    var clearedByResize by remember { mutableStateOf(false) }
 
     val strokeWidthPx = with(LocalDensity.current) { 4.dp.toPx() }
 
@@ -54,22 +53,30 @@ fun SignatureDrawScreen(onSave: (String) -> Unit, onCancel: () -> Unit) {
         Text("Draw your signature", style = MaterialTheme.typography.headlineSmall)
 
         Box(
+            // weight(1f), not a fixed height - a fixed 320.dp canvas left no room for
+            // the button row below it in landscape, where the screen is much shorter.
+            // Not fixed with a scroll container instead: a vertical scroll gesture
+            // would compete with the canvas's own drag-to-draw gesture on the same
+            // area. Letting the canvas just shrink to fill whatever space remains
+            // keeps the buttons always visible with no gesture conflict.
             modifier = Modifier
                 .fillMaxWidth()
-                .height(320.dp)
+                .weight(1f)
                 .background(Color.White)
                 .onSizeChanged { newSize ->
-                    if (canvasSize != IntSize.Zero && canvasSize != newSize && strokes.isNotEmpty()) {
-                        strokes = emptyList()
-                        currentStroke = emptyList()
-                        clearedByResize = true
+                    if (canvasSize != IntSize.Zero && canvasSize != newSize &&
+                        canvasSize.width > 0 && canvasSize.height > 0
+                    ) {
+                        val scaleX = newSize.width.toFloat() / canvasSize.width
+                        val scaleY = newSize.height.toFloat() / canvasSize.height
+                        strokes = strokes.map { stroke -> stroke.map { Offset(it.x * scaleX, it.y * scaleY) } }
+                        currentStroke = currentStroke.map { Offset(it.x * scaleX, it.y * scaleY) }
                     }
                     canvasSize = newSize
                 }
                 .pointerInput(Unit) {
                     detectDragGestures(
                         onDragStart = { offset ->
-                            clearedByResize = false
                             currentStroke = listOf(offset)
                         },
                         onDrag = { change, _ ->
@@ -103,13 +110,9 @@ fun SignatureDrawScreen(onSave: (String) -> Unit, onCancel: () -> Unit) {
         }
 
         Text(
-            text = if (clearedByResize) {
-                "The drawing area changed size, so it was cleared - please sign again."
-            } else {
-                "Sign with your finger or a stylus, then tap Save."
-            },
-            style = MaterialTheme.typography.bodySmall,
-            color = if (clearedByResize) Color(0xFFB37A2A) else Color.Unspecified
+            text = "Sign with your finger or a stylus, then tap Save. Rotating your " +
+                "device gives more room to draw.",
+            style = MaterialTheme.typography.bodySmall
         )
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
