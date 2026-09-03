@@ -12,11 +12,14 @@ port of that codebase.
 
 ## Status
 
-Early release. Bugs and rough edges are expected. What exists so far:
+Early release, published on Google Play as a closed test. Bugs and rough edges are expected.
+What exists so far:
 
-- Nextcloud Single Sign-On authentication via the Nextcloud Files app.
-- The shared app shell: hamburger navigation, settings (light/dark/follow-system theme), and an
-  about screen.
+- Nextcloud Single Sign-On authentication via the Nextcloud Files app, with instant switching
+  between previously-approved accounts (and an avatar in the top bar) - no need to go through the
+  Files app's approval flow again.
+- The shared app shell: hamburger navigation, settings (theme, notifications), and an about
+  screen.
 - One document list showing every document you're involved in, each with its own status (ready
   to sign, partially signed, signed) - tap a document to see every signer's status and any custom
   message the requester left.
@@ -27,6 +30,11 @@ Early release. Bugs and rough edges are expected. What exists so far:
 - Set up a signature by picking an image or drawing it with a finger or stylus, used
   automatically when a document needs a visible signature.
 - Validates a signed document's signature and shows LibreSign's own verdict for it.
+- Notifications when a document needs your signature, configurable in Settings: off, a periodic
+  background check (needs no extra app), or instant delivery via
+  [UnifiedPush](https://unifiedpush.org/) (needs a small distributor app such as `ntfy`
+  installed).
+- Available in English and Swedish, following the device's system language automatically.
 
 ## Disclaimer
 
