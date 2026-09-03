@@ -8,3 +8,8 @@ local.properties
 build/
 **/build/
 .kotlin/
+
+# Release signing - a real secret, unlike the checked-in debug.keystore (whose
+# password is the well-known public default "android"). Never commit these.
+app/release.keystore
+app/keystore.properties

@@ -1,7 +1,21 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+}
+
+// Release signing credentials live in app/keystore.properties (gitignored, not
+// committed) rather than hardcoded like the debug config - this is a real secret,
+// unlike the debug keystore's well-known public "android" password. Falls back to
+// null (skips the release signingConfig) if the file doesn't exist, so a fresh
+// checkout without it can still build debug variants.
+val keystoreProperties = Properties().apply {
+    val propertiesFile = rootProject.file("app/keystore.properties")
+    if (propertiesFile.exists()) {
+        propertiesFile.inputStream().use { load(it) }
+    }
 }
 
 android {
@@ -12,8 +26,8 @@ android {
         applicationId = "se.cloudsite.nextsign"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
     }
 
     signingConfigs {
@@ -25,11 +39,22 @@ android {
             keyAlias = "androiddebugkey"
             keyPassword = "android"
         }
+        if (keystoreProperties.containsKey("storeFile")) {
+            create("release") {
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (keystoreProperties.containsKey("storeFile")) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 
@@ -68,5 +93,6 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.nextcloud.sso)
     implementation(libs.unifiedpush.connector)
+    implementation(libs.androidx.work.runtime.ktx)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 }
