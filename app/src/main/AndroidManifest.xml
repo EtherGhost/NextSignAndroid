@@ -17,8 +17,16 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/Theme.NextSign">
+        <!-- Without this, Android destroys and recreates the whole Activity on
+             rotation by default - since all app state (current screen, documents,
+             signature drawing, etc.) lives in plain MainActivity fields rather than a
+             ViewModel/SavedStateHandle, a recreate wiped it all, dumping the user back
+             to the document list mid-task. This makes Compose just re-lay-out in
+             place instead, keeping everything intact. -->
         <activity
             android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode"
+            android:launchMode="singleTask"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

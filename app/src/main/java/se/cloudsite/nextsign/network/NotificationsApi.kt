@@ -2,6 +2,7 @@ package se.cloudsite.nextsign.network
 
 import com.google.gson.JsonElement
 import retrofit2.Call
+import retrofit2.http.DELETE
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
@@ -34,4 +35,12 @@ interface NotificationsApi {
     @FormUrlEncoded
     @POST("webpush/activate?format=json")
     fun activateWebPush(@Field("activationToken") activationToken: String): Call<OcsResponse<JsonElement>>
+
+    // Called both when the user turns push off in Settings, and (just for the
+    // previously-active account) when switching accounts - otherwise a stale
+    // subscription for an account you've switched away from keeps receiving pushes on
+    // the same device, since registerWebPush() has no way to know a different account
+    // was previously using the same UnifiedPush endpoint.
+    @DELETE("webpush?format=json")
+    fun unregisterWebPush(): Call<OcsResponse<JsonElement>>
 }

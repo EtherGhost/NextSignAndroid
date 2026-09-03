@@ -38,6 +38,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -67,7 +68,6 @@ import com.nextcloud.android.sso.exceptions.NextcloudFilesAppNotInstalledExcepti
 import com.nextcloud.android.sso.exceptions.NoCurrentAccountSelectedException
 import com.nextcloud.android.sso.helper.SingleAccountHelper
 import com.nextcloud.android.sso.model.SingleSignOnAccount
-import com.nextcloud.android.sso.ui.UiExceptionManager
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -77,6 +77,7 @@ import se.cloudsite.nextsign.model.LibreSignDocument
 import se.cloudsite.nextsign.model.SignatureElement
 import se.cloudsite.nextsign.model.ValidationSummary
 import se.cloudsite.nextsign.network.ApiProvider
+import se.cloudsite.nextsign.push.DocumentPollWorker
 import se.cloudsite.nextsign.repository.DocumentDownloader
 import se.cloudsite.nextsign.repository.DownloadResult
 import se.cloudsite.nextsign.repository.LibreSignRepository
@@ -97,6 +98,9 @@ import se.cloudsite.nextsign.ui.signature.SignatureDrawScreen
 import se.cloudsite.nextsign.ui.signature.SignatureSetupScreen
 import se.cloudsite.nextsign.ui.theme.NextSignTheme
 import se.cloudsite.nextsign.util.AccountHistory
+import se.cloudsite.nextsign.util.NotificationMode
+import se.cloudsite.nextsign.util.PushPreference
+import se.cloudsite.nextsign.util.SeenDocumentsStore
 import se.cloudsite.nextsign.util.SignatureImageEncoder
 import se.cloudsite.nextsign.util.ThemeMode
 import se.cloudsite.nextsign.util.ThemePreference
@@ -114,6 +118,8 @@ class MainActivity : ComponentActivity() {
     private val documentDownloader by lazy { DocumentDownloader(applicationContext) }
 
     private var account: SingleSignOnAccount? by mutableStateOf(null)
+    private var signInErrorMessage: String by mutableStateOf("")
+    private var showInstallNextcloudButton: Boolean by mutableStateOf(false)
     private var documents: List<LibreSignDocument> by mutableStateOf(emptyList())
     private var loading: Boolean by mutableStateOf(false)
     private var errorMessage: String by mutableStateOf("")
@@ -146,6 +152,7 @@ class MainActivity : ComponentActivity() {
     private var signatureSetupError: String by mutableStateOf("")
 
     private var themeMode: ThemeMode by mutableStateOf(ThemeMode.SYSTEM)
+    private var notificationMode: NotificationMode by mutableStateOf(NotificationMode.INSTANT)
 
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
@@ -162,9 +169,19 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         themeMode = ThemePreference.get(this)
+        notificationMode = PushPreference.getMode(this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        // Tier 1 of the push notifications plan - a periodic-sync fallback that works
+        // regardless of whether real-time push (Tier 2, below) is available. Runs in
+        // both BACKGROUND_ONLY and INSTANT modes; SeenDocumentsStore is what prevents
+        // the two tiers from ever producing a duplicate notification for the same
+        // document when both are active.
+        if (notificationMode != NotificationMode.OFF) {
+            DocumentPollWorker.enqueue(this)
         }
 
         account = try {
@@ -189,12 +206,19 @@ class MainActivity : ComponentActivity() {
                             refresh(currentAccount)
                             loadSignatureElements(currentAccount)
                             loadAvatar(currentAccount)
-                            registerForPushTest(currentAccount)
+                            if (notificationMode == NotificationMode.INSTANT) {
+                                syncPushRegistration(currentAccount)
+                            }
                         }
                     }
 
                     if (currentAccount == null) {
-                        SignInScreen(onSignIn = { pickAccount() })
+                        SignInScreen(
+                            errorMessage = signInErrorMessage,
+                            showInstallNextcloudButton = showInstallNextcloudButton,
+                            onSignIn = { pickAccount() },
+                            onInstallNextcloud = { openPlayStoreListing(this@MainActivity, "com.nextcloud.client") }
+                        )
                     } else {
                         when (currentScreen) {
                             Screen.DOCUMENT_LIST -> {
@@ -356,6 +380,14 @@ class MainActivity : ComponentActivity() {
                                     themeMode = mode
                                     ThemePreference.set(this@MainActivity, mode)
                                 },
+                                notificationMode = notificationMode,
+                                onNotificationModeSelected = { onNotificationModeChanged(it) },
+                                // Live device state, not app state - re-checked each time
+                                // Settings is shown rather than cached, so installing ntfy
+                                // and coming back immediately reflects it with no extra
+                                // signal needed.
+                                hasPushDistributor = UnifiedPush.getDistributors(this@MainActivity).isNotEmpty(),
+                                onInstallPushHelper = { openPlayStoreListing(this@MainActivity, "io.heckel.ntfy") },
                                 onBack = { currentScreen = Screen.DOCUMENT_LIST }
                             )
 
@@ -392,6 +424,7 @@ class MainActivity : ComponentActivity() {
     // even for an account that's already been granted. Matches the real Nextcloud
     // Notes app's own account-switching pattern (ManageAccountsViewModel.java).
     private fun switchToKnownAccount(accountName: String) {
+        val previousAccount = account
         SingleAccountHelper.commitCurrentAccount(this, accountName)
         val newAccount = try {
             SingleAccountHelper.getCurrentSingleSignOnAccount(this)
@@ -404,6 +437,9 @@ class MainActivity : ComponentActivity() {
             errorMessage = "Could not switch to that account."
             return
         }
+        if (notificationMode == NotificationMode.INSTANT && previousAccount != null && previousAccount.name != newAccount.name) {
+            unregisterWebPushOnly(previousAccount)
+        }
         ApiProvider.invalidate(newAccount)
         documents = emptyList()
         signatureElementsByType = emptyMap()
@@ -415,12 +451,41 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun pickAccount() {
+        signInErrorMessage = ""
+        showInstallNextcloudButton = false
         try {
             AccountImporter.pickNewAccount(this)
         } catch (e: NextcloudFilesAppNotInstalledException) {
-            UiExceptionManager.showDialogForException(this, e)
+            // Deliberately not UiExceptionManager.showDialogForException(this, e) here -
+            // that builds a MaterialAlertDialogBuilder, which requires the Activity's
+            // theme to be Theme.MaterialComponents (or a descendant). This app's real
+            // theme (themes.xml) is android:Theme.Material.Light.NoActionBar - the
+            // platform theme, not Material Components, since theming is otherwise done
+            // entirely in Compose - so that dialog throws IllegalArgumentException
+            // immediately on construction. This was a real, confirmed crash: worked on
+            // a phone with Nextcloud installed (this path never ran), crashed
+            // immediately on one without it (this path always ran, straight into the
+            // theme-mismatch exception). Plain Compose state instead, same as every
+            // other error message in this app.
+            signInErrorMessage = "The Nextcloud app is required to sign in. Install it " +
+                "from the Play Store, set up your account there, then try again."
+            showInstallNextcloudButton = true
         } catch (e: AndroidGetAccountsPermissionNotGranted) {
             AccountImporter.requestAndroidAccountPermissionsAndPickAccount(this)
+        } catch (e: ActivityNotFoundException) {
+            // AccountImporter.pickNewAccount() has already confirmed the Nextcloud app
+            // is installed by this point, but its own source calls
+            // startActivityForResult() on the system account-chooser intent with no
+            // try/catch of its own - if that intent doesn't resolve on this device
+            // (confirmed via the library's real source, not guessed), it throws this
+            // completely uncaught, crashing the app. Real crash report: worked on one
+            // phone, crashed on another.
+            signInErrorMessage = "Could not open the account picker. Make sure the " +
+                "Nextcloud app is installed and set up on this device."
+        } catch (e: Exception) {
+            // Catch-all so an unexpected failure here shows a message instead of
+            // crashing - this is the very first thing a new user does with the app.
+            signInErrorMessage = "Could not start Nextcloud sign-in: ${e.message ?: e.toString()}"
         }
     }
 
@@ -429,6 +494,7 @@ class MainActivity : ComponentActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         try {
             AccountImporter.onActivityResult(requestCode, resultCode, data, this) { ssoAccount ->
+                val previousAccount = account
                 SingleAccountHelper.commitCurrentAccount(this, ssoAccount.name)
                 // ApiProvider caches NextcloudAPI/Retrofit instances keyed only by
                 // account name - if this same account was picked before (in this app
@@ -439,6 +505,9 @@ class MainActivity : ComponentActivity() {
                 // specific, just-imported SingleSignOnAccount every time.
                 ApiProvider.invalidate(ssoAccount)
                 AccountHistory.remember(this, ssoAccount.name)
+                if (notificationMode == NotificationMode.INSTANT && previousAccount != null && previousAccount.name != ssoAccount.name) {
+                    unregisterWebPushOnly(previousAccount)
+                }
                 // Clear everything account-specific before switching - otherwise the
                 // previous account's documents/avatar/signature could stay visible for
                 // a moment under the new account's header, or a stale in-flight
@@ -462,6 +531,20 @@ class MainActivity : ComponentActivity() {
         AccountImporter.onRequestPermissionsResult(requestCode, permissions, grantResults, this)
     }
 
+    // Tapping a notification (real-time push or the Tier 1 background poll) opens
+    // MainActivity - since it's launchMode="singleTask" (see the manifest), if the app
+    // is already running this calls onNewIntent() on the existing instance instead of
+    // creating a new one or just resuming a stale one. A plain resume wouldn't
+    // refresh anything on its own (LaunchedEffect only fires on first composition or
+    // an account change) - since true per-document deep-linking isn't feasible (see
+    // PushServiceImpl), an immediate refresh is the honest substitute: whatever
+    // prompted the notification, the list the user lands on is current.
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        account?.let { refresh(it) }
+    }
+
     private fun refresh(account: SingleSignOnAccount) {
         loading = true
         errorMessage = ""
@@ -475,6 +558,10 @@ class MainActivity : ComponentActivity() {
                 is LoadDocumentsResult.Success -> {
                     documents = result.documents
                     loading = false
+                    // Seeing the list in the app counts the same as being notified
+                    // about it - keeps DocumentPollWorker (Tier 1) from later treating
+                    // something the user already saw here as a new arrival.
+                    SeenDocumentsStore.markSeen(applicationContext, result.documents.map { it.uuid }.toSet())
                 }
                 is LoadDocumentsResult.Failure -> {
                     errorMessage = result.message
@@ -613,14 +700,14 @@ class MainActivity : ComponentActivity() {
         saveSignatureElement(account, dataUri)
     }
 
-    // Push-notification proof of concept (Tier 2 of the push notifications plan) -
-    // fetches the server's VAPID public key and registers this device with whatever
-    // UnifiedPush distributor the user has installed (e.g. ntfy). Nextcloud's own
-    // webpush handshake requires the VAPID key be passed to UnifiedPush.register()
-    // up front, matching Nextcloud Talk's real Android client rather than the lazy
+    // Push notifications (Tier 2 of the push notifications plan) - fetches the
+    // server's VAPID public key and registers this device with whatever UnifiedPush
+    // distributor the user has installed (e.g. ntfy). Nextcloud's own webpush
+    // handshake requires the VAPID key be passed to UnifiedPush.register() up front,
+    // matching Nextcloud Talk's real Android client rather than the lazy
     // VAPID_REQUIRED retry shown in UnifiedPush's own generic example app - Nextcloud
     // always requires VAPID, so there's no reason to wait for that failure first.
-    private fun registerForPushTest(account: SingleSignOnAccount) {
+    private fun syncPushRegistration(account: SingleSignOnAccount) {
         lifecycleScope.launch {
             try {
                 val api = withContext(Dispatchers.IO) { ApiProvider.getNotificationsApi(applicationContext, account) }
@@ -651,6 +738,53 @@ class MainActivity : ComponentActivity() {
                 }
             } catch (e: Exception) {
                 android.util.Log.e("NextSignPush", "Failed to fetch VAPID key", e)
+            }
+        }
+    }
+
+    // Server-side only - tells Nextcloud to stop sending this account's notifications
+    // to this device's UnifiedPush endpoint, without tearing down the endpoint itself
+    // (see switchToKnownAccount()/onActivityResult(), which reuse the same endpoint
+    // for whichever account becomes active next). Fire-and-forget: nothing in the UI
+    // depends on this completing, and if it fails, the worst case is a stale
+    // subscription that a later full toggle-off will still catch.
+    private fun unregisterWebPushOnly(account: SingleSignOnAccount) {
+        lifecycleScope.launch {
+            try {
+                val api = withContext(Dispatchers.IO) { ApiProvider.getNotificationsApi(applicationContext, account) }
+                val response = withContext(Dispatchers.IO) { api.unregisterWebPush().execute() }
+                android.util.Log.i("NextSignPush", "unregisterWebPush (switch) for ${account.name}: HTTP ${response.code()}")
+            } catch (e: Exception) {
+                android.util.Log.e("NextSignPush", "unregisterWebPush (switch) failed", e)
+            }
+        }
+    }
+
+    // Full teardown of Tier 2 - unlike unregisterWebPushOnly(), this also tells the
+    // UnifiedPush distributor itself we no longer want the endpoint, since (unlike a
+    // mere account switch) the user has explicitly chosen a mode without instant push.
+    private fun disableInstantPush(account: SingleSignOnAccount?) {
+        if (account != null) {
+            unregisterWebPushOnly(account)
+        }
+        UnifiedPush.unregister(this, instance = "default")
+    }
+
+    private fun onNotificationModeChanged(mode: NotificationMode) {
+        notificationMode = mode
+        PushPreference.setMode(this, mode)
+        when (mode) {
+            NotificationMode.OFF -> {
+                DocumentPollWorker.cancel(this)
+                disableInstantPush(account)
+            }
+            NotificationMode.BACKGROUND_ONLY -> {
+                DocumentPollWorker.enqueue(this)
+                disableInstantPush(account)
+            }
+            NotificationMode.INSTANT -> {
+                DocumentPollWorker.enqueue(this)
+                account?.let { syncPushRegistration(it) }
             }
         }
     }
@@ -789,7 +923,12 @@ private fun formatValidationSummary(summary: ValidationSummary): String {
 }
 
 @Composable
-private fun SignInScreen(onSignIn: () -> Unit) {
+private fun SignInScreen(
+    errorMessage: String,
+    showInstallNextcloudButton: Boolean,
+    onSignIn: () -> Unit,
+    onInstallNextcloud: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -799,6 +938,39 @@ private fun SignInScreen(onSignIn: () -> Unit) {
         Text(text = "NextSign", style = MaterialTheme.typography.headlineMedium)
         Button(onClick = onSignIn) {
             Text("Sign in with Nextcloud")
+        }
+        if (errorMessage.isNotEmpty()) {
+            Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
+        }
+        if (showInstallNextcloudButton) {
+            OutlinedButton(onClick = onInstallNextcloud) {
+                Text("Install Nextcloud")
+            }
+        }
+    }
+}
+
+// Tries the Play Store app first (market:// - opens directly in the Play Store app
+// with an "Install" button front and center), falls back to the plain https:// listing
+// page if nothing can handle that (e.g. no Play Store on this device at all - the
+// same class of gap that caused the crash this whole feature exists to avoid).
+private fun openPlayStoreListing(context: android.content.Context, packageName: String) {
+    try {
+        context.startActivity(
+            Intent(Intent.ACTION_VIEW, android.net.Uri.parse("market://details?id=$packageName"))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    } catch (e: ActivityNotFoundException) {
+        try {
+            context.startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    android.net.Uri.parse("https://play.google.com/store/apps/details?id=$packageName")
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+        } catch (e2: ActivityNotFoundException) {
+            // Nothing on this device can open either - the caller's own message
+            // already tells the user what to do, nothing more we can offer here.
         }
     }
 }
