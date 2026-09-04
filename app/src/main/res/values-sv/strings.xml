@@ -27,6 +27,10 @@
     <string name="account_switcher_title">Växla konto</string>
     <string name="account_switcher_current">Aktuellt</string>
     <string name="account_switcher_add_account">Lägg till ett till konto</string>
+    <string name="account_switcher_sign_out">Logga ut</string>
+    <string name="sign_out_confirm_title">Logga ut?</string>
+    <string name="sign_out_confirm_message">Du behöver logga in igen för att se dina dokument.</string>
+    <string name="sign_out_switch_confirm_message">Detta glömmer det aktuella kontot - du behöver logga in helt på nytt för att använda det igen. NextSign fortsätter med %1$s.</string>
 
     <string name="close_button">Stäng</string>
     <string name="back_content_description">Tillbaka</string>

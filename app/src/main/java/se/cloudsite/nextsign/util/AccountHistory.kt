@@ -23,4 +23,16 @@ object AccountHistory {
         if (accountName in current) return
         prefs.edit().putStringSet(KEY_KNOWN_ACCOUNTS, current + accountName).apply()
     }
+
+    // Removes an account from the switcher's known-accounts list - used by sign-out, so
+    // that account genuinely requires the full re-approval flow again next time, rather
+    // than staying one tap away via instant switching. Does not touch the account's own
+    // SSO grant in Android's account manager (there's no public API in the SSO library
+    // for that), so other apps using the same account (e.g. the Files app) are
+    // unaffected, and re-adding it later via "Add another account" is still fast.
+    fun forget(context: Context, accountName: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val current = prefs.getStringSet(KEY_KNOWN_ACCOUNTS, emptySet()).orEmpty()
+        prefs.edit().putStringSet(KEY_KNOWN_ACCOUNTS, current - accountName).apply()
+    }
 }

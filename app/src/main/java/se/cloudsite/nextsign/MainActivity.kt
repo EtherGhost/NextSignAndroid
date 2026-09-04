@@ -17,7 +17,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,11 +26,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -57,6 +58,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.FileProvider
@@ -88,6 +90,7 @@ import se.cloudsite.nextsign.repository.SignResult
 import se.cloudsite.nextsign.repository.SignatureElementsResult
 import se.cloudsite.nextsign.repository.ValidateResult
 import se.cloudsite.nextsign.ui.about.AboutScreen
+import se.cloudsite.nextsign.ui.common.StatusPill
 import se.cloudsite.nextsign.ui.documentdetail.DocumentDetailDialog
 import se.cloudsite.nextsign.ui.documentdetail.MessageDialog
 import se.cloudsite.nextsign.ui.documentdetail.SignConfirmDialog
@@ -141,6 +144,7 @@ class MainActivity : ComponentActivity() {
 
     private var currentScreen: Screen by mutableStateOf(Screen.DOCUMENT_LIST)
     private var showAccountSwitcher: Boolean by mutableStateOf(false)
+    private var showSignOutConfirm: Boolean by mutableStateOf(false)
     private var sortMode: SortMode by mutableStateOf(SortMode.DATE_DESC)
     // { "signature": nodeId, "initial": nodeId, ... } - the account's own registered
     // signature/initials images, needed alongside a document's placeholder position to
@@ -412,7 +416,24 @@ class MainActivity : ComponentActivity() {
                                     showAccountSwitcher = false
                                     pickAccount()
                                 },
+                                onSignOut = {
+                                    showAccountSwitcher = false
+                                    showSignOutConfirm = true
+                                },
                                 onDismiss = { showAccountSwitcher = false }
+                            )
+                        }
+
+                        if (showSignOutConfirm) {
+                            val nextAccountName = AccountHistory.list(this@MainActivity)
+                                .firstOrNull { it != currentAccount.name }
+                            SignOutConfirmDialog(
+                                nextAccountName = nextAccountName,
+                                onConfirm = {
+                                    showSignOutConfirm = false
+                                    signOut()
+                                },
+                                onDismiss = { showSignOutConfirm = false }
                             )
                         }
                     }
@@ -452,6 +473,47 @@ class MainActivity : ComponentActivity() {
         selectedDocumentUuid = null
         errorMessage = ""
         account = newAccount
+    }
+
+    // Signs out of the CURRENT account only - other approved accounts are unaffected
+    // and stay usable, matching the user's explicit choice between "sign out of
+    // everything" and "sign out of just the current one, keep using the others" (a real
+    // multi-account "sign out of everything" isn't achievable anyway: the SSO library
+    // has no public API to revoke a specific account's grant, only to clear which one
+    // NextSign treats as current). Forgets the account from AccountHistory so it
+    // genuinely requires the full re-approval flow again, rather than staying one tap
+    // away via instant switching - that's what makes this a real sign-out rather than
+    // just a switch. If another known account remains, switches straight into it
+    // (switchToKnownAccount() already handles clearing per-account state and
+    // unregistering push for the account being left) instead of dropping to a bare
+    // sign-in screen - signing out of one account shouldn't end the session for
+    // accounts still in use. Only when no other account remains does this clear the SSO
+    // library's own persisted "current account" pointer directly
+    // (commitCurrentAccount(context, null) - confirmed via the library's actual
+    // bytecode that storing null is equivalent to removing the key) - clearing only
+    // this Activity's local `account` field would look like a sign-out in this session
+    // but silently undo itself on the next app launch, since onCreate() re-reads the
+    // same persisted account, and DocumentPollWorker/PushServiceImpl read it
+    // independently of this Activity too.
+    private fun signOut() {
+        val current = account ?: return
+        AccountHistory.forget(this, current.name)
+        val nextAccountName = AccountHistory.list(this).firstOrNull()
+        if (nextAccountName != null) {
+            switchToKnownAccount(nextAccountName)
+            return
+        }
+        if (notificationMode == NotificationMode.INSTANT) {
+            unregisterWebPushOnly(current)
+        }
+        SingleAccountHelper.commitCurrentAccount(this, null)
+        documents = emptyList()
+        signatureElementsByType = emptyMap()
+        signaturePreviewBitmap = null
+        avatarBitmap = null
+        selectedDocumentUuid = null
+        errorMessage = ""
+        account = null
     }
 
     private fun pickAccount() {
@@ -496,6 +558,19 @@ class MainActivity : ComponentActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         try {
             AccountImporter.onActivityResult(requestCode, resultCode, data, this) { ssoAccount ->
+                // The system account picker AccountImporter.pickNewAccount() opens has
+                // no API to exclude accounts already known to this app (confirmed from
+                // the library's own source - it always passes null for the exclusion
+                // list) - it lists every Nextcloud-type account on the device, already
+                // added here or not. Re-picking one already in AccountHistory is
+                // handled as a plain instant switch (same as tapping it in the
+                // switcher's own list) rather than repeating the full "just imported a
+                // new account" bookkeeping below, which is only meaningful the first
+                // time an account is added.
+                if (ssoAccount.name in AccountHistory.list(this)) {
+                    switchToKnownAccount(ssoAccount.name)
+                    return@onActivityResult
+                }
                 val previousAccount = account
                 SingleAccountHelper.commitCurrentAccount(this, ssoAccount.name)
                 // ApiProvider caches NextcloudAPI/Retrofit instances keyed only by
@@ -875,29 +950,44 @@ private fun AccountSwitcherDialog(
     currentAccountName: String,
     onSelectAccount: (String) -> Unit,
     onAddAccount: () -> Unit,
+    onSignOut: () -> Unit,
     onDismiss: () -> Unit
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = MaterialTheme.shapes.large) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(R.string.account_switcher_title), style = MaterialTheme.typography.titleLarge)
-                Spacer(modifier = Modifier.padding(top = 4.dp))
-                knownAccountNames.forEach { name ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelectAccount(name) }
-                            .padding(vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(name, modifier = Modifier.weight(1f))
-                        if (name == currentAccountName) {
-                            Text(stringResource(R.string.account_switcher_current), style = MaterialTheme.typography.labelSmall)
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    knownAccountNames.forEach { name ->
+                        val isCurrent = name == currentAccountName
+                        Surface(
+                            shape = MaterialTheme.shapes.small,
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onSelectAccount(name) }
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(name)
+                                if (isCurrent) {
+                                    StatusPill(
+                                        text = stringResource(R.string.account_switcher_current),
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
                         }
                     }
                 }
+                HorizontalDivider()
                 TextButton(onClick = onAddAccount, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.account_switcher_add_account))
+                }
+                TextButton(onClick = onSignOut, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.account_switcher_sign_out), color = MaterialTheme.colorScheme.error)
                 }
                 TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.close_button))
@@ -905,6 +995,29 @@ private fun AccountSwitcherDialog(
             }
         }
     }
+}
+
+@Composable
+private fun SignOutConfirmDialog(nextAccountName: String?, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.sign_out_confirm_title)) },
+        text = {
+            Text(
+                if (nextAccountName != null) {
+                    stringResource(R.string.sign_out_switch_confirm_message, nextAccountName)
+                } else {
+                    stringResource(R.string.sign_out_confirm_message)
+                }
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text(stringResource(R.string.account_switcher_sign_out)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel_button)) }
+        }
+    )
 }
 
 @Composable
@@ -937,14 +1050,19 @@ private fun SignInScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(text = stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium)
         Button(onClick = onSignIn) {
             Text(stringResource(R.string.sign_in_button))
         }
         if (errorMessage.isNotEmpty()) {
-            Text(text = errorMessage, color = MaterialTheme.colorScheme.error)
+            Text(
+                text = errorMessage,
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center
+            )
         }
         if (showInstallNextcloudButton) {
             OutlinedButton(onClick = onInstallNextcloud) {

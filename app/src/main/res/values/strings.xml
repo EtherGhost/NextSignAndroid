@@ -31,6 +31,10 @@
     <string name="account_switcher_title">Switch account</string>
     <string name="account_switcher_current">Current</string>
     <string name="account_switcher_add_account">Add another account</string>
+    <string name="account_switcher_sign_out">Sign out</string>
+    <string name="sign_out_confirm_title">Sign out?</string>
+    <string name="sign_out_confirm_message">You\'ll need to sign in again to see your documents.</string>
+    <string name="sign_out_switch_confirm_message">This forgets the current account - you\'ll need to fully sign in again to use it. NextSign will continue with %1$s.</string>
 
     <!-- Shared -->
     <string name="close_button">Close</string>
