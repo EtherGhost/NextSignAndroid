@@ -2,7 +2,6 @@ package se.cloudsite.nextsign.ui.documentdetail
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -20,6 +19,7 @@ import androidx.compose.ui.window.Dialog
 import se.cloudsite.nextsign.R
 import se.cloudsite.nextsign.model.LibreSignDocument
 import se.cloudsite.nextsign.model.statusLabel
+import se.cloudsite.nextsign.ui.common.StatusPill
 
 @Composable
 fun DocumentDetailDialog(
@@ -47,16 +47,22 @@ fun DocumentDetailDialog(
                 Text(statusLabel(document.fileStatus))
 
                 document.signers.forEach { signer ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    val hasSigned = signer.signed.isNotEmpty()
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(signer.displayName.ifEmpty { stringResource(R.string.document_unknown_signer) })
-                        val hasSigned = signer.signed.isNotEmpty()
-                        Text(
-                            text = if (hasSigned) stringResource(R.string.status_signed) else stringResource(R.string.status_ready_to_sign),
-                            color = if (hasSigned) Color(0xFF5A8F3C) else Color(0xFFB37A2A)
-                        )
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(signer.displayName.ifEmpty { stringResource(R.string.document_unknown_signer) })
+                            StatusPill(
+                                text = if (hasSigned) stringResource(R.string.status_signed) else stringResource(R.string.status_ready_to_sign),
+                                color = if (hasSigned) Color(0xFF5A8F3C) else Color(0xFFB37A2A)
+                            )
+                        }
                     }
                 }
 
