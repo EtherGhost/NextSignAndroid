@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -100,28 +101,50 @@ fun AboutScreen(onBack: () -> Unit) {
             // License/Disclaimer text stays English-only in every language (legal/
             // attribution content, not general UI text) - see the translatable="false"
             // keys in values/strings.xml, matching the Ubuntu Touch app's own convention.
-            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(stringResource(R.string.about_license_title), style = MaterialTheme.typography.titleMedium)
-                Text(stringResource(R.string.about_license_text))
-                Text(
-                    stringResource(R.string.about_copyright),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(stringResource(R.string.about_license_title), style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.about_license_text))
+                    Text(
+                        stringResource(R.string.about_copyright),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
-            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(stringResource(R.string.about_disclaimer_title), style = MaterialTheme.typography.titleMedium)
-                // The "hobby project, no support" and "use at your own risk" framing
-                // stays in the GitHub README only, not here - the About screen is for
-                // the average paying user asking "does this work, who do I contact,"
-                // not a support-model disclaimer. Only the trademark/affiliation
-                // disclaimer belongs on-screen. Do not restore the removed lines here.
-                Text(
-                    stringResource(R.string.about_disclaimer_text),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(stringResource(R.string.about_disclaimer_title), style = MaterialTheme.typography.titleMedium)
+                    // The "hobby project, no support" and "use at your own risk" framing
+                    // stays in the GitHub README only, not here - the About screen is for
+                    // the average paying user asking "does this work, who do I contact,"
+                    // not a support-model disclaimer. Only the trademark/affiliation
+                    // disclaimer belongs on-screen. Do not restore the removed lines here.
+                    Text(
+                        stringResource(R.string.about_disclaimer_text),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }

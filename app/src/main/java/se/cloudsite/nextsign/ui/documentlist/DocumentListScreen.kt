@@ -1,24 +1,37 @@
 package se.cloudsite.nextsign.ui.documentlist
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -26,8 +39,8 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import se.cloudsite.nextsign.R
 import se.cloudsite.nextsign.model.LibreSignDocument
+import se.cloudsite.nextsign.model.statusColor
 import se.cloudsite.nextsign.model.statusLabel
-import se.cloudsite.nextsign.ui.common.StatusPill
 
 enum class SortMode { DATE_DESC, DATE_ASC, NAME_ASC }
 
@@ -77,7 +90,7 @@ fun DocumentListScreen(
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(documents, key = { it.uuid }) { document ->
                     DocumentRow(document = document, onClick = { onDocumentClick(document) })
@@ -89,15 +102,29 @@ fun DocumentListScreen(
 
 @Composable
 private fun DocumentRow(document: LibreSignDocument, onClick: () -> Unit) {
-    Card(
+    val color = statusColor(document.fileStatus, document.canSignNow)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
             .clickable(onClick = onClick)
+            .padding(12.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            // Status badge on its own row, always left-aligned at the same position -
-            // keeping it inline next to the name put it at a different horizontal spot
-            // on every card depending on how long the name was.
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .fillMaxHeight()
+                .clip(RoundedCornerShape(2.dp))
+                .background(color)
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 12.dp)
+        ) {
             Text(
                 text = document.name.ifEmpty { stringResource(R.string.document_untitled) },
                 style = MaterialTheme.typography.titleMedium,
@@ -107,17 +134,33 @@ private fun DocumentRow(document: LibreSignDocument, onClick: () -> Unit) {
             if (document.requestedBy.isNotEmpty()) {
                 Text(
                     text = stringResource(R.string.document_requested_by, document.requestedBy),
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            StatusBadge(fileStatus = document.fileStatus)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 6.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(color)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = statusLabel(document.fileStatus, document.canSignNow),
+                    color = color,
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+        }
+        IconButton(onClick = onClick) {
+            Icon(
+                Icons.Filled.MoreVert,
+                contentDescription = stringResource(R.string.document_row_menu_content_description)
+            )
         }
     }
-}
-
-@Composable
-private fun StatusBadge(fileStatus: Int) {
-    // Matches the Ubuntu Touch app's own status-badge colors (HomePage.qml).
-    val color = if (fileStatus == 3) Color(0xFF5A8F3C) else Color(0xFFB37A2A)
-    StatusPill(text = statusLabel(fileStatus), color = color, modifier = Modifier.padding(top = 6.dp))
 }

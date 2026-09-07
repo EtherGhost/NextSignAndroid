@@ -1,8 +1,11 @@
 package se.cloudsite.nextsign.model
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import se.cloudsite.nextsign.R
+import se.cloudsite.nextsign.ui.theme.NextSignBlue
+import se.cloudsite.nextsign.ui.theme.NextSignGreen
 
 data class LibreSignDocument(
     val uuid: String,
@@ -41,9 +44,20 @@ data class VisibleElementRef(
 )
 
 @Composable
-fun statusLabel(fileStatus: Int): String = when (fileStatus) {
+fun statusLabel(fileStatus: Int, canSignNow: Boolean): String = when (fileStatus) {
     1 -> stringResource(R.string.status_ready_to_sign)
-    2 -> stringResource(R.string.status_partially_signed)
+    // Partially signed: still says so if it's this signer's turn, but once their own
+    // part is done the doc is just waiting on the remaining signers, not on them.
+    2 -> if (canSignNow) {
+        stringResource(R.string.status_partially_signed)
+    } else {
+        stringResource(R.string.status_waiting_on_others)
+    }
     3 -> stringResource(R.string.status_signed)
     else -> ""
 }
+
+// Nothing left for this signer to do (fully signed, or their own part of a
+// partially-signed doc) is green; still owed by this signer is blue.
+fun statusColor(fileStatus: Int, canSignNow: Boolean): Color =
+    if (fileStatus == 3 || (fileStatus == 2 && !canSignNow)) NextSignGreen else NextSignBlue

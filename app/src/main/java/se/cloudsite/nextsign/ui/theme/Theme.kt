@@ -12,6 +12,10 @@ import se.cloudsite.nextsign.util.ThemeMode
 // assets/logo.svg in the Ubuntu Touch app).
 val NextSignBlue = Color(0xFF1F6FEB)
 
+// Shared status colors: blue means a signature is still owed by someone, green means
+// there's nothing left to do. Used wherever a document/signer status needs a color.
+val NextSignGreen = Color(0xFF5A8F3C)
+
 private val LightColors = lightColorScheme(primary = NextSignBlue)
 private val DarkColors = darkColorScheme(primary = NextSignBlue)
 

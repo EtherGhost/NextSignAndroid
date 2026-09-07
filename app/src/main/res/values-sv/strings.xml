@@ -42,6 +42,8 @@
 
     <string name="status_ready_to_sign">Redo att signera</string>
     <string name="status_partially_signed">Delvis signerat</string>
+    <string name="status_waiting_on_others">Väntar på övriga</string>
+    <string name="document_row_menu_content_description">Dokumentalternativ</string>
     <string name="status_signed">Signerat</string>
 
     <string name="document_unknown_signer">Okänd signerare</string>

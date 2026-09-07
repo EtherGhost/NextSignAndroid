@@ -1,9 +1,16 @@
 package se.cloudsite.nextsign.ui.documentdetail
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -11,15 +18,17 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import se.cloudsite.nextsign.R
 import se.cloudsite.nextsign.model.LibreSignDocument
 import se.cloudsite.nextsign.model.statusLabel
-import se.cloudsite.nextsign.ui.common.StatusPill
+import se.cloudsite.nextsign.ui.theme.NextSignBlue
+import se.cloudsite.nextsign.ui.theme.NextSignGreen
 
 @Composable
 fun DocumentDetailDialog(
@@ -44,13 +53,14 @@ fun DocumentDetailDialog(
                     document.name.ifEmpty { stringResource(R.string.document_untitled) },
                     style = MaterialTheme.typography.titleLarge
                 )
-                Text(statusLabel(document.fileStatus))
+                Text(statusLabel(document.fileStatus, document.canSignNow))
 
                 document.signers.forEach { signer ->
                     val hasSigned = signer.signed.isNotEmpty()
+                    val color = if (hasSigned) NextSignGreen else NextSignBlue
                     Surface(
                         shape = MaterialTheme.shapes.small,
-                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(
@@ -58,10 +68,24 @@ fun DocumentDetailDialog(
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(signer.displayName.ifEmpty { stringResource(R.string.document_unknown_signer) })
-                            StatusPill(
-                                text = if (hasSigned) stringResource(R.string.status_signed) else stringResource(R.string.status_ready_to_sign),
-                                color = if (hasSigned) Color(0xFF5A8F3C) else Color(0xFFB37A2A)
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(CircleShape)
+                                        .background(color)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = if (hasSigned) {
+                                        stringResource(R.string.status_signed)
+                                    } else {
+                                        stringResource(R.string.status_ready_to_sign)
+                                    },
+                                    color = color,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
                         }
                     }
                 }
@@ -69,7 +93,7 @@ fun DocumentDetailDialog(
                 if (document.messageForMe.isNotEmpty()) {
                     Surface(
                         shape = MaterialTheme.shapes.small,
-                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(8.dp)) {

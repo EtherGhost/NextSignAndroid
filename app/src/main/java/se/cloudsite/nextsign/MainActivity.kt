@@ -11,7 +11,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,7 +21,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
@@ -56,11 +54,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.nextcloud.android.sso.AccountImporter
@@ -90,7 +86,8 @@ import se.cloudsite.nextsign.repository.SignResult
 import se.cloudsite.nextsign.repository.SignatureElementsResult
 import se.cloudsite.nextsign.repository.ValidateResult
 import se.cloudsite.nextsign.ui.about.AboutScreen
-import se.cloudsite.nextsign.ui.common.StatusPill
+import se.cloudsite.nextsign.ui.account.AccountScreen
+import se.cloudsite.nextsign.ui.common.AccountAvatar
 import se.cloudsite.nextsign.ui.documentdetail.DocumentDetailDialog
 import se.cloudsite.nextsign.ui.documentdetail.MessageDialog
 import se.cloudsite.nextsign.ui.documentdetail.SignConfirmDialog
@@ -109,7 +106,7 @@ import se.cloudsite.nextsign.util.SignatureImageEncoder
 import se.cloudsite.nextsign.util.ThemeMode
 import se.cloudsite.nextsign.util.ThemePreference
 
-private enum class Screen { DOCUMENT_LIST, SIGNATURE_SETUP, SIGNATURE_DRAW, SETTINGS, ABOUT }
+private enum class Screen { DOCUMENT_LIST, SIGNATURE_SETUP, SIGNATURE_DRAW, SETTINGS, ABOUT, ACCOUNT }
 
 // Uses AccountImporter.pickNewAccount()/onActivityResult(), not the newer
 // ImportSsoAccount ActivityResultContract shown in the library's current README -
@@ -143,8 +140,11 @@ class MainActivity : ComponentActivity() {
     private var downloadErrorMessage: String? by mutableStateOf(null)
 
     private var currentScreen: Screen by mutableStateOf(Screen.DOCUMENT_LIST)
-    private var showAccountSwitcher: Boolean by mutableStateOf(false)
     private var showSignOutConfirm: Boolean by mutableStateOf(false)
+    // Per-account avatars for the account list screen, keyed by account name - separate
+    // from avatarBitmap (which only ever holds the CURRENT account's avatar, for the
+    // top-bar button). Populated lazily via loadAccountAvatars() when that screen opens.
+    private var accountAvatars: Map<String, Bitmap?> by mutableStateOf(emptyMap())
     private var sortMode: SortMode by mutableStateOf(SortMode.DATE_DESC)
     // { "signature": nodeId, "initial": nodeId, ... } - the account's own registered
     // signature/initials images, needed alongside a document's placeholder position to
@@ -245,7 +245,7 @@ class MainActivity : ComponentActivity() {
                                                 selected = false,
                                                 onClick = {
                                                     drawerScope.launch { drawerState.close() }
-                                                    showAccountSwitcher = true
+                                                    openAccountScreen()
                                                 }
                                             )
                                             NavigationDrawerItem(
@@ -287,7 +287,7 @@ class MainActivity : ComponentActivity() {
                                         sortMode = sortMode,
                                         onSortModeSelected = { sortMode = it },
                                         avatarBitmap = avatarBitmap,
-                                        onSwitchAccount = { showAccountSwitcher = true },
+                                        onSwitchAccount = { openAccountScreen() },
                                         onMenuClick = { drawerScope.launch { drawerState.open() } },
                                         onRefresh = { refresh(currentAccount) },
                                         onDocumentClick = { selectedDocumentUuid = it.uuid },
@@ -400,27 +400,26 @@ class MainActivity : ComponentActivity() {
                             )
 
                             Screen.ABOUT -> AboutScreen(onBack = { currentScreen = Screen.DOCUMENT_LIST })
-                        }
 
-                        if (showAccountSwitcher) {
-                            AccountSwitcherDialog(
+                            Screen.ACCOUNT -> AccountScreen(
                                 knownAccountNames = AccountHistory.list(this@MainActivity),
                                 currentAccountName = currentAccount.name,
+                                avatarsByName = accountAvatars,
                                 onSelectAccount = { name ->
-                                    showAccountSwitcher = false
+                                    currentScreen = Screen.DOCUMENT_LIST
                                     if (name != currentAccount.name) {
                                         switchToKnownAccount(name)
                                     }
                                 },
                                 onAddAccount = {
-                                    showAccountSwitcher = false
+                                    currentScreen = Screen.DOCUMENT_LIST
                                     pickAccount()
                                 },
                                 onSignOut = {
-                                    showAccountSwitcher = false
+                                    currentScreen = Screen.DOCUMENT_LIST
                                     showSignOutConfirm = true
                                 },
-                                onDismiss = { showAccountSwitcher = false }
+                                onBack = { currentScreen = Screen.DOCUMENT_LIST }
                             )
                         }
 
@@ -745,6 +744,36 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun openAccountScreen() {
+        currentScreen = Screen.ACCOUNT
+        loadAccountAvatars(AccountHistory.list(this))
+    }
+
+    // Populates accountAvatars for every known account so the account list can show a
+    // real avatar per row, not just for whichever one happens to be current.
+    // AccountImporter.getSingleSignOnAccount() resolves a SingleSignOnAccount for any
+    // already-approved account by name without touching which one is "current" (unlike
+    // SingleAccountHelper.commitCurrentAccount(), which would actually switch).
+    private fun loadAccountAvatars(names: List<String>) {
+        names.forEach { name ->
+            if (name in accountAvatars) return@forEach
+            lifecycleScope.launch {
+                val resolved = try {
+                    AccountImporter.getSingleSignOnAccount(this@MainActivity, name)
+                } catch (e: NextcloudFilesAppAccountNotFoundException) {
+                    null
+                }
+                val bitmap = resolved?.let {
+                    when (val result = withContext(Dispatchers.IO) { documentDownloader.downloadAvatar(it) }) {
+                        is DownloadResult.Success -> BitmapFactory.decodeFile(result.file.path)
+                        is DownloadResult.Failure -> null
+                    }
+                }
+                accountAvatars = accountAvatars + (name to bitmap)
+            }
+        }
+    }
+
     private fun openSignatureSetup(account: SingleSignOnAccount) {
         signatureSetupError = ""
         currentScreen = Screen.SIGNATURE_SETUP
@@ -920,81 +949,15 @@ private fun SortMenuButton(sortMode: SortMode, onSortModeSelected: (SortMode) ->
 // it opens the account picker to switch accounts, same as the UT app's own top bar.
 @Composable
 private fun AccountAvatarButton(bitmap: Bitmap?, initial: String, onClick: () -> Unit) {
-    Box(
+    AccountAvatar(
+        bitmap = bitmap,
+        initial = initial,
+        size = 32.dp,
         modifier = Modifier
             .padding(end = 12.dp)
-            .size(32.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.primaryContainer)
             .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        if (bitmap != null) {
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = stringResource(R.string.switch_account_content_description),
-                modifier = Modifier.fillMaxSize()
-            )
-        } else {
-            Text(initial, color = MaterialTheme.colorScheme.onPrimaryContainer)
-        }
-    }
-}
-
-// Offers instant switching between accounts already approved on this device (no
-// Files-app UI involved), plus an explicit action to approve a genuinely new one -
-// see switchToKnownAccount()/pickAccount() for why these are different flows.
-@Composable
-private fun AccountSwitcherDialog(
-    knownAccountNames: List<String>,
-    currentAccountName: String,
-    onSelectAccount: (String) -> Unit,
-    onAddAccount: () -> Unit,
-    onSignOut: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(shape = MaterialTheme.shapes.large) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(stringResource(R.string.account_switcher_title), style = MaterialTheme.typography.titleLarge)
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    knownAccountNames.forEach { name ->
-                        val isCurrent = name == currentAccountName
-                        Surface(
-                            shape = MaterialTheme.shapes.small,
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onSelectAccount(name) }
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(12.dp),
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Text(name)
-                                if (isCurrent) {
-                                    StatusPill(
-                                        text = stringResource(R.string.account_switcher_current),
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-                HorizontalDivider()
-                TextButton(onClick = onAddAccount, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.account_switcher_add_account))
-                }
-                TextButton(onClick = onSignOut, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.account_switcher_sign_out), color = MaterialTheme.colorScheme.error)
-                }
-                TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.close_button))
-                }
-            }
-        }
-    }
+        contentDescription = stringResource(R.string.switch_account_content_description)
+    )
 }
 
 @Composable

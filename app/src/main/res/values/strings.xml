@@ -49,6 +49,8 @@
     <!-- Status labels -->
     <string name="status_ready_to_sign">Ready to sign</string>
     <string name="status_partially_signed">Partially signed</string>
+    <string name="status_waiting_on_others">Waiting on others</string>
+    <string name="document_row_menu_content_description">Document options</string>
     <string name="status_signed">Signed</string>
 
     <!-- Document detail -->
