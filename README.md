@@ -17,7 +17,7 @@ What exists so far:
 
 - Nextcloud Single Sign-On authentication via the Nextcloud Files app, with instant switching
   between previously-approved accounts (and an avatar in the top bar) - no need to go through the
-  Files app's approval flow again.
+  Files app's approval flow again - plus a sign-out option when you're done with an account.
 - The shared app shell: hamburger navigation, settings (theme, notifications), and an about
   screen.
 - One document list showing every document you're involved in, each with its own status (ready
