@@ -21,8 +21,11 @@ What exists so far:
 - The shared app shell: hamburger navigation, settings (theme, notifications), and an about
   screen.
 - One document list showing every document you're involved in, each with its own status (ready
-  to sign, partially signed, signed) - tap a document to see every signer's status and any custom
-  message the requester left.
+  to sign, partially signed, signed, or not assigned to you) - sorted to show what needs your
+  signature first by default. Tap a document to see every signer's status and any custom message
+  the requester left.
+- A launcher icon badge showing how many documents are waiting on your signature, kept in sync in
+  the background alongside the notification options below.
 - Lets you view a document before or after signing: downloads it and hands it to whichever app
   you pick via Android's share sheet, rather than an in-app PDF viewer.
 - Signs a document with a tap, using LibreSign's `clickToSign` method, after a confirmation
@@ -34,7 +37,9 @@ What exists so far:
   background check (needs no extra app), or instant delivery via
   [UnifiedPush](https://unifiedpush.org/) (needs a small distributor app such as `ntfy`
   installed).
-- Available in English and Swedish, following the device's system language automatically.
+- Available in English, Swedish, German, French, Spanish, Italian, Dutch, Danish, Norwegian
+  Bokmål, Polish, and Russian, with an in-app language picker (or follow the device's system
+  language automatically).
 
 ## Disclaimer
 
