@@ -24,8 +24,9 @@ What exists so far:
   to sign, partially signed, signed, or not assigned to you) - sorted to show what needs your
   signature first by default. Tap a document to see every signer's status and any custom message
   the requester left.
-- A launcher icon badge showing how many documents are waiting on your signature, kept in sync in
-  the background alongside the notification options below.
+- A launcher icon badge - a dot or a number, depending on your device and launcher - when
+  documents are waiting on your signature, kept in sync in the background alongside the
+  notification options below.
 - Lets you view a document before or after signing: downloads it and hands it to whichever app
   you pick via Android's share sheet, rather than an in-app PDF viewer.
 - Signs a document with a tap, using LibreSign's `clickToSign` method, after a confirmation
