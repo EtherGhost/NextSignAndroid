@@ -23,6 +23,7 @@
     <string name="switch_account_content_description">Switch account</string>
 
     <!-- Sort menu -->
+    <string name="sort_needs_signature_first">To sign first</string>
     <string name="sort_newest_first">Newest first</string>
     <string name="sort_oldest_first">Oldest first</string>
     <string name="sort_name_asc">Name (A-Z)</string>
@@ -85,6 +86,8 @@
     <string name="theme_follow_system">Follow system</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="settings_language">Language</string>
+    <string name="language_system_default">System default</string>
     <string name="settings_notifications">Notifications</string>
     <string name="notification_off_label">Off</string>
     <string name="notification_off_description">No notifications about documents to sign.</string>
@@ -139,5 +142,9 @@
 
     <!-- Push / background notifications -->
     <string name="notification_channel_name">Notifications</string>
+    <!-- Android Settings > Apps > Notifications channel name - shown to the user if
+         they go looking for why this "notification" (really just the launcher badge
+         backing) exists, and to let them mute it independently of real alerts. -->
+    <string name="notification_channel_badge_name">Pending documents</string>
     <string name="poll_new_document_notification">\"%1$s\" is ready to sign</string>
 </resources>

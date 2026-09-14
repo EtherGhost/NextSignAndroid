@@ -20,6 +20,7 @@
     <string name="signed_in_as">Inloggad som %1$s</string>
     <string name="switch_account_content_description">Växla konto</string>
 
+    <string name="sort_needs_signature_first">Att signera först</string>
     <string name="sort_newest_first">Nyast först</string>
     <string name="sort_oldest_first">Äldst först</string>
     <string name="sort_name_asc">Namn (A-Ö)</string>
@@ -74,6 +75,8 @@
     <string name="theme_follow_system">Följ systemet</string>
     <string name="theme_light">Ljust</string>
     <string name="theme_dark">Mörkt</string>
+    <string name="settings_language">Språk</string>
+    <string name="language_system_default">Följ systemet</string>
     <string name="settings_notifications">Aviseringar</string>
     <string name="notification_off_label">Av</string>
     <string name="notification_off_description">Inga aviseringar om dokument att signera.</string>
@@ -114,5 +117,6 @@
     <string name="error_action_failed_http">%1$s misslyckades med HTTP %2$d.</string>
 
     <string name="notification_channel_name">Aviseringar</string>
+    <string name="notification_channel_badge_name">Väntande dokument</string>
     <string name="poll_new_document_notification">\"%1$s\" är redo att signeras</string>
 </resources>

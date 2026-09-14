@@ -1,0 +1,122 @@
+<resources>
+    <!-- Deliberately no about_license_*/about_disclaimer_* entries here - see the
+         comment in values/strings.xml. Falls back to the English default. -->
+
+    <string name="sign_in_button">Logg inn med Nextcloud</string>
+    <string name="sign_in_error_no_nextcloud">Nextcloud-appen kreves for å logge inn. Installer den fra Play Store, sett opp kontoen din der, og prøv igjen.</string>
+    <string name="sign_in_error_picker_failed">Kunne ikke åpne kontovelgeren. Sørg for at Nextcloud-appen er installert og satt opp på denne enheten.</string>
+    <string name="sign_in_error_generic">Kunne ikke starte Nextcloud-innlogging: %1$s</string>
+    <string name="install_nextcloud_button">Installer Nextcloud</string>
+    <string name="account_import_canceled">Kontoimport avbrutt.</string>
+    <string name="account_switch_failed">Kunne ikke bytte til den kontoen.</string>
+
+    <string name="drawer_account">Konto</string>
+    <string name="drawer_signature">Signatur</string>
+    <string name="drawer_settings">Innstillinger</string>
+    <string name="drawer_about">Om</string>
+    <string name="menu_content_description">Meny</string>
+
+    <string name="refresh_content_description">Oppdater</string>
+    <string name="signed_in_as">Logget inn som %1$s</string>
+    <string name="switch_account_content_description">Bytt konto</string>
+
+    <string name="sort_needs_signature_first">Skal signeres først</string>
+    <string name="sort_newest_first">Nyeste først</string>
+    <string name="sort_oldest_first">Eldste først</string>
+    <string name="sort_name_asc">Navn (A-Å)</string>
+
+    <string name="account_switcher_title">Bytt konto</string>
+    <string name="account_switcher_current">Nåværende</string>
+    <string name="account_switcher_add_account">Legg til en annen konto</string>
+    <string name="account_switcher_sign_out">Logg ut</string>
+    <string name="sign_out_confirm_title">Logge ut?</string>
+    <string name="sign_out_confirm_message">Du må logge inn igjen for å se dokumentene dine.</string>
+    <string name="sign_out_switch_confirm_message">Dette glemmer den nåværende kontoen - du må logge helt inn på nytt for å bruke den igjen. NextSign fortsetter med %1$s.</string>
+
+    <string name="close_button">Lukk</string>
+    <string name="back_content_description">Tilbake</string>
+    <string name="cancel_button">Avbryt</string>
+
+    <string name="document_list_empty">Ingen dokumenter ennå.</string>
+    <string name="document_untitled">Dokument uten navn</string>
+    <string name="document_requested_by">Forespurt av %1$s</string>
+
+    <string name="status_ready_to_sign">Klar til signering</string>
+    <string name="status_partially_signed">Delvis signert</string>
+    <string name="status_waiting_on_others">Venter på andre</string>
+    <string name="document_row_menu_content_description">Dokumentalternativer</string>
+    <string name="status_signed">Signert</string>
+
+    <string name="document_unknown_signer">Ukjent underskriver</string>
+    <string name="document_message_from_requester">Melding fra forespørreren</string>
+    <string name="sign_document_button">Signer dokument</string>
+    <string name="signing_in_progress">Signerer…</string>
+    <string name="validation_info_button">Valideringsinfo</string>
+    <string name="validating_in_progress">Validerer…</string>
+    <string name="open_file_button">Åpne fil</string>
+    <string name="opening_in_progress">Åpner…</string>
+    <string name="open_with_chooser_title">Åpne med</string>
+
+    <string name="sign_confirm_title">Signere dette dokumentet?</string>
+    <string name="sign_confirm_message">Dette signerer \"%1$s\" med LibreSigns click-to-sign-metode. Dette kan ikke angres.</string>
+    <string name="sign_button">Signer</string>
+
+    <string name="signed_dialog_title">Signert</string>
+    <string name="signed_dialog_message">\"%1$s\" har blitt signert.</string>
+    <string name="sign_error_dialog_title">Kunne ikke signere dokumentet</string>
+    <string name="validation_result_dialog_title">Signaturvalidering</string>
+    <string name="validation_error_dialog_title">Kunne ikke validere dokumentet</string>
+    <string name="open_file_error_dialog_title">Kunne ikke åpne dokumentet</string>
+    <string name="sign_error_no_sign_uuid">Kunne ikke fastslå signeringsforespørselen din for dette dokumentet.</string>
+    <string name="open_file_no_app">Ingen installert app kan åpne dette dokumentet.</string>
+
+    <string name="settings_title">Innstillinger</string>
+    <string name="settings_theme">Tema</string>
+    <string name="theme_follow_system">Følg systemet</string>
+    <string name="theme_light">Lyst</string>
+    <string name="theme_dark">Mørkt</string>
+    <string name="settings_language">Språk</string>
+    <string name="language_system_default">Systemspråk</string>
+    <string name="settings_notifications">Varsler</string>
+    <string name="notification_off_label">Av</string>
+    <string name="notification_off_description">Ingen varsler om dokumenter som skal signeres.</string>
+    <string name="notification_background_label">Bakgrunnssjekk</string>
+    <string name="notification_background_description">Sjekker med jevne mellomrom (omtrent hvert 15. minutt) - ingen ekstra app nødvendig.</string>
+    <string name="notification_instant_label">Umiddelbart</string>
+    <string name="notification_instant_description">Varsles umiddelbart når et dokument trenger signaturen din - krever en liten hjelpeapp installert (se nedenfor).</string>
+    <string name="notification_instant_active">Du blir varslet så snart et dokument trenger signaturen din, med bakgrunnssjekken som backup.</string>
+    <string name="notification_instant_guidance">Installer en liten gratis hjelpeapp kalt \"ntfy\" for umiddelbar levering - den krever verken konto eller oppsett, bare installer den og kom tilbake hit. Frem til da dekker bakgrunnssjekken deg fortsatt.</string>
+    <string name="install_ntfy_button">Installer ntfy</string>
+
+    <string name="about_title">Om</string>
+    <string name="about_version">Versjon %1$s</string>
+    <string name="about_description">En native Android-klient for LibreSign, den elektroniske signaturappen for Nextcloud. Den forbereder ikke dokumenter eller plasserer signaturfelt - det skjer et annet sted. NextSign viser hva som venter på signaturen din, og signerer det med et trykk via LibreSigns click-to-sign-metode.</string>
+
+    <string name="signature_title">Signatur</string>
+    <string name="signature_has_signature_description">Du har satt opp et signaturbilde. Dokumenter med et synlig signaturfelt vil bruke det når du signerer.</string>
+    <string name="signature_no_signature_description">Velg et bilde av signaturen din, eller tegn en. Dokumenter med et synlig signaturfelt vil bruke det når du signerer.</string>
+    <string name="signature_preview_content_description">Forhåndsvisning av signatur</string>
+    <string name="draw_signature_button">Tegn signatur</string>
+    <string name="saving_in_progress">Lagrer…</string>
+    <string name="pick_image_button">Velg et bilde</string>
+    <string name="signature_setup_error_bad_image">Kunne ikke bruke det valgte bildet. Prøv et mindre bilde.</string>
+
+    <string name="draw_signature_title">Tegn signaturen din</string>
+    <string name="draw_signature_hint">Signer med fingeren eller en penn, og trykk deretter på Lagre. Å rotere enheten gir deg mer plass å tegne på.</string>
+    <string name="clear_button">Fjern</string>
+    <string name="save_button">Lagre</string>
+
+    <string name="document_location_unknown">Dette dokumentets plassering er ukjent.</string>
+    <string name="cache_dir_prepare_failed">Hurtigbufferkatalogen kunne ikke forberedes.</string>
+    <string name="downloaded_file_empty">Den nedlastede filen er tom.</string>
+    <string name="libresign_unexpected_response">LibreSign returnerte et uventet svar.</string>
+    <string name="action_libresign_request">LibreSign-forespørsel</string>
+    <string name="action_signing">Signering</string>
+    <string name="action_validation">Validering</string>
+    <string name="action_saving_signature">Lagrer signaturen din</string>
+    <string name="error_action_failed_http">%1$s mislyktes med HTTP %2$d.</string>
+
+    <string name="notification_channel_name">Varsler</string>
+    <string name="notification_channel_badge_name">Ventende dokumenter</string>
+    <string name="poll_new_document_notification">\"%1$s\" er klar til signering</string>
+</resources>

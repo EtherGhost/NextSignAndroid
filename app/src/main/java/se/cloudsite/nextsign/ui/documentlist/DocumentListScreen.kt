@@ -42,10 +42,15 @@ import se.cloudsite.nextsign.model.LibreSignDocument
 import se.cloudsite.nextsign.model.statusColor
 import se.cloudsite.nextsign.model.statusLabel
 
-enum class SortMode { DATE_DESC, DATE_ASC, NAME_ASC }
+enum class SortMode { NEEDS_SIGNATURE_FIRST, DATE_DESC, DATE_ASC, NAME_ASC }
 
 fun sortDocuments(documents: List<LibreSignDocument>, sortMode: SortMode): List<LibreSignDocument> {
     return when (sortMode) {
+        // Groups by canSignNow (true first), newest-first within each group - answers
+        // "what needs my attention" without a separate filter UI. The app's default.
+        SortMode.NEEDS_SIGNATURE_FIRST -> documents.sortedWith(
+            compareByDescending<LibreSignDocument> { it.canSignNow }.thenByDescending { parseCreatedAt(it.createdAt) }
+        )
         SortMode.NAME_ASC -> documents.sortedBy { it.name.lowercase() }
         SortMode.DATE_ASC -> documents.sortedBy { parseCreatedAt(it.createdAt) }
         SortMode.DATE_DESC -> documents.sortedByDescending { parseCreatedAt(it.createdAt) }

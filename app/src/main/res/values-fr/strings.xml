@@ -1,0 +1,122 @@
+<resources>
+    <!-- Deliberately no about_license_*/about_disclaimer_* entries here - see the
+         comment in values/strings.xml. Falls back to the English default. -->
+
+    <string name="sign_in_button">Se connecter avec Nextcloud</string>
+    <string name="sign_in_error_no_nextcloud">L\'application Nextcloud est nécessaire pour se connecter. Installez-la depuis le Play Store, configurez-y votre compte, puis réessayez.</string>
+    <string name="sign_in_error_picker_failed">Impossible d\'ouvrir le sélecteur de compte. Vérifiez que l\'application Nextcloud est installée et configurée sur cet appareil.</string>
+    <string name="sign_in_error_generic">Impossible de démarrer la connexion Nextcloud : %1$s</string>
+    <string name="install_nextcloud_button">Installer Nextcloud</string>
+    <string name="account_import_canceled">Importation du compte annulée.</string>
+    <string name="account_switch_failed">Impossible de basculer vers ce compte.</string>
+
+    <string name="drawer_account">Compte</string>
+    <string name="drawer_signature">Signature</string>
+    <string name="drawer_settings">Paramètres</string>
+    <string name="drawer_about">À propos</string>
+    <string name="menu_content_description">Menu</string>
+
+    <string name="refresh_content_description">Actualiser</string>
+    <string name="signed_in_as">Connecté en tant que %1$s</string>
+    <string name="switch_account_content_description">Changer de compte</string>
+
+    <string name="sort_needs_signature_first">À signer d\'abord</string>
+    <string name="sort_newest_first">Plus récents d\'abord</string>
+    <string name="sort_oldest_first">Plus anciens d\'abord</string>
+    <string name="sort_name_asc">Nom (A-Z)</string>
+
+    <string name="account_switcher_title">Changer de compte</string>
+    <string name="account_switcher_current">Actuel</string>
+    <string name="account_switcher_add_account">Ajouter un autre compte</string>
+    <string name="account_switcher_sign_out">Se déconnecter</string>
+    <string name="sign_out_confirm_title">Se déconnecter ?</string>
+    <string name="sign_out_confirm_message">Vous devrez vous reconnecter pour voir vos documents.</string>
+    <string name="sign_out_switch_confirm_message">Cela oublie le compte actuel - vous devrez vous reconnecter entièrement pour l\'utiliser à nouveau. NextSign continuera avec %1$s.</string>
+
+    <string name="close_button">Fermer</string>
+    <string name="back_content_description">Retour</string>
+    <string name="cancel_button">Annuler</string>
+
+    <string name="document_list_empty">Aucun document pour l\'instant.</string>
+    <string name="document_untitled">Document sans titre</string>
+    <string name="document_requested_by">Demandé par %1$s</string>
+
+    <string name="status_ready_to_sign">Prêt à signer</string>
+    <string name="status_partially_signed">Partiellement signé</string>
+    <string name="status_waiting_on_others">En attente des autres</string>
+    <string name="document_row_menu_content_description">Options du document</string>
+    <string name="status_signed">Signé</string>
+
+    <string name="document_unknown_signer">Signataire inconnu</string>
+    <string name="document_message_from_requester">Message du demandeur</string>
+    <string name="sign_document_button">Signer le document</string>
+    <string name="signing_in_progress">Signature en cours…</string>
+    <string name="validation_info_button">Infos de validation</string>
+    <string name="validating_in_progress">Validation en cours…</string>
+    <string name="open_file_button">Ouvrir le fichier</string>
+    <string name="opening_in_progress">Ouverture…</string>
+    <string name="open_with_chooser_title">Ouvrir avec</string>
+
+    <string name="sign_confirm_title">Signer ce document ?</string>
+    <string name="sign_confirm_message">Ceci signera \"%1$s\" avec la méthode click-to-sign de LibreSign. Cette action est irréversible.</string>
+    <string name="sign_button">Signer</string>
+
+    <string name="signed_dialog_title">Signé</string>
+    <string name="signed_dialog_message">\"%1$s\" a été signé.</string>
+    <string name="sign_error_dialog_title">Impossible de signer le document</string>
+    <string name="validation_result_dialog_title">Validation de la signature</string>
+    <string name="validation_error_dialog_title">Impossible de valider le document</string>
+    <string name="open_file_error_dialog_title">Impossible d\'ouvrir le document</string>
+    <string name="sign_error_no_sign_uuid">Impossible de déterminer votre demande de signature pour ce document.</string>
+    <string name="open_file_no_app">Aucune application installée ne peut ouvrir ce document.</string>
+
+    <string name="settings_title">Paramètres</string>
+    <string name="settings_theme">Thème</string>
+    <string name="theme_follow_system">Suivre le système</string>
+    <string name="theme_light">Clair</string>
+    <string name="theme_dark">Sombre</string>
+    <string name="settings_language">Langue</string>
+    <string name="language_system_default">Langue du système</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="notification_off_label">Désactivées</string>
+    <string name="notification_off_description">Aucune notification pour les documents à signer.</string>
+    <string name="notification_background_label">Vérification en arrière-plan</string>
+    <string name="notification_background_description">Vérifie périodiquement (environ toutes les 15 minutes) - aucune application supplémentaire nécessaire.</string>
+    <string name="notification_instant_label">Instantanées</string>
+    <string name="notification_instant_description">Notifié immédiatement quand un document a besoin de votre signature - nécessite une petite application d\'assistance installée (voir ci-dessous).</string>
+    <string name="notification_instant_active">Vous serez averti dès qu\'un document nécessitera votre signature, avec la vérification en arrière-plan en secours.</string>
+    <string name="notification_instant_guidance">Installez une petite application gratuite nommée \"ntfy\" pour une livraison instantanée - elle ne nécessite ni compte ni configuration, installez-la simplement et revenez ici. En attendant, la vérification en arrière-plan continue de vous couvrir.</string>
+    <string name="install_ntfy_button">Installer ntfy</string>
+
+    <string name="about_title">À propos</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_description">Un client Android natif pour LibreSign, l\'application de signature électronique pour Nextcloud. Il ne prépare pas les documents et ne place pas de champs de signature - cela se fait ailleurs. NextSign affiche ce qui attend votre signature et le signe d\'un geste grâce à la méthode click-to-sign de LibreSign.</string>
+
+    <string name="signature_title">Signature</string>
+    <string name="signature_has_signature_description">Vous avez configuré une image de signature. Les documents comportant un champ de signature visible l\'utiliseront lors de la signature.</string>
+    <string name="signature_no_signature_description">Choisissez une image de votre signature, ou dessinez-en une. Les documents comportant un champ de signature visible l\'utiliseront lors de la signature.</string>
+    <string name="signature_preview_content_description">Aperçu de la signature</string>
+    <string name="draw_signature_button">Dessiner une signature</string>
+    <string name="saving_in_progress">Enregistrement…</string>
+    <string name="pick_image_button">Choisir une image</string>
+    <string name="signature_setup_error_bad_image">Impossible d\'utiliser l\'image sélectionnée. Essayez une image plus petite.</string>
+
+    <string name="draw_signature_title">Dessinez votre signature</string>
+    <string name="draw_signature_hint">Signez avec votre doigt ou un stylet, puis appuyez sur Enregistrer. Faire pivoter l\'appareil vous donne plus d\'espace pour dessiner.</string>
+    <string name="clear_button">Effacer</string>
+    <string name="save_button">Enregistrer</string>
+
+    <string name="document_location_unknown">L\'emplacement de ce document est inconnu.</string>
+    <string name="cache_dir_prepare_failed">Le dossier de cache n\'a pas pu être préparé.</string>
+    <string name="downloaded_file_empty">Le fichier téléchargé est vide.</string>
+    <string name="libresign_unexpected_response">LibreSign a renvoyé une réponse inattendue.</string>
+    <string name="action_libresign_request">Requête LibreSign</string>
+    <string name="action_signing">Signature</string>
+    <string name="action_validation">Validation</string>
+    <string name="action_saving_signature">Enregistrement de votre signature</string>
+    <string name="error_action_failed_http">%1$s a échoué avec le code HTTP %2$d.</string>
+
+    <string name="notification_channel_name">Notifications</string>
+    <string name="notification_channel_badge_name">Documents en attente</string>
+    <string name="poll_new_document_notification">\"%1$s\" est prêt à être signé</string>
+</resources>

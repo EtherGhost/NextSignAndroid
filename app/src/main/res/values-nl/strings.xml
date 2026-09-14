@@ -1,0 +1,122 @@
+<resources>
+    <!-- Deliberately no about_license_*/about_disclaimer_* entries here - see the
+         comment in values/strings.xml. Falls back to the English default. -->
+
+    <string name="sign_in_button">Inloggen met Nextcloud</string>
+    <string name="sign_in_error_no_nextcloud">De Nextcloud-app is vereist om in te loggen. Installeer deze via de Play Store, stel daar je account in en probeer het opnieuw.</string>
+    <string name="sign_in_error_picker_failed">Kon de accountkiezer niet openen. Zorg dat de Nextcloud-app op dit apparaat is geïnstalleerd en ingesteld.</string>
+    <string name="sign_in_error_generic">Kon Nextcloud-inloggen niet starten: %1$s</string>
+    <string name="install_nextcloud_button">Nextcloud installeren</string>
+    <string name="account_import_canceled">Account importeren geannuleerd.</string>
+    <string name="account_switch_failed">Kon niet naar dat account overschakelen.</string>
+
+    <string name="drawer_account">Account</string>
+    <string name="drawer_signature">Handtekening</string>
+    <string name="drawer_settings">Instellingen</string>
+    <string name="drawer_about">Over</string>
+    <string name="menu_content_description">Menu</string>
+
+    <string name="refresh_content_description">Vernieuwen</string>
+    <string name="signed_in_as">Ingelogd als %1$s</string>
+    <string name="switch_account_content_description">Account wisselen</string>
+
+    <string name="sort_needs_signature_first">Te ondertekenen eerst</string>
+    <string name="sort_newest_first">Nieuwste eerst</string>
+    <string name="sort_oldest_first">Oudste eerst</string>
+    <string name="sort_name_asc">Naam (A-Z)</string>
+
+    <string name="account_switcher_title">Account wisselen</string>
+    <string name="account_switcher_current">Huidig</string>
+    <string name="account_switcher_add_account">Nog een account toevoegen</string>
+    <string name="account_switcher_sign_out">Uitloggen</string>
+    <string name="sign_out_confirm_title">Uitloggen?</string>
+    <string name="sign_out_confirm_message">Je moet opnieuw inloggen om je documenten te zien.</string>
+    <string name="sign_out_switch_confirm_message">Dit vergeet het huidige account - je moet volledig opnieuw inloggen om het weer te gebruiken. NextSign gaat verder met %1$s.</string>
+
+    <string name="close_button">Sluiten</string>
+    <string name="back_content_description">Terug</string>
+    <string name="cancel_button">Annuleren</string>
+
+    <string name="document_list_empty">Nog geen documenten.</string>
+    <string name="document_untitled">Naamloos document</string>
+    <string name="document_requested_by">Aangevraagd door %1$s</string>
+
+    <string name="status_ready_to_sign">Klaar om te ondertekenen</string>
+    <string name="status_partially_signed">Gedeeltelijk ondertekend</string>
+    <string name="status_waiting_on_others">Wacht op anderen</string>
+    <string name="document_row_menu_content_description">Documentopties</string>
+    <string name="status_signed">Ondertekend</string>
+
+    <string name="document_unknown_signer">Onbekende ondertekenaar</string>
+    <string name="document_message_from_requester">Bericht van de aanvrager</string>
+    <string name="sign_document_button">Document ondertekenen</string>
+    <string name="signing_in_progress">Ondertekenen…</string>
+    <string name="validation_info_button">Validatie-info</string>
+    <string name="validating_in_progress">Valideren…</string>
+    <string name="open_file_button">Bestand openen</string>
+    <string name="opening_in_progress">Openen…</string>
+    <string name="open_with_chooser_title">Openen met</string>
+
+    <string name="sign_confirm_title">Dit document ondertekenen?</string>
+    <string name="sign_confirm_message">Dit ondertekent \"%1$s\" met LibreSigns click-to-sign-methode. Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="sign_button">Ondertekenen</string>
+
+    <string name="signed_dialog_title">Ondertekend</string>
+    <string name="signed_dialog_message">\"%1$s\" is ondertekend.</string>
+    <string name="sign_error_dialog_title">Kon document niet ondertekenen</string>
+    <string name="validation_result_dialog_title">Handtekeningvalidatie</string>
+    <string name="validation_error_dialog_title">Kon document niet valideren</string>
+    <string name="open_file_error_dialog_title">Kon document niet openen</string>
+    <string name="sign_error_no_sign_uuid">Kon je ondertekeningsverzoek voor dit document niet bepalen.</string>
+    <string name="open_file_no_app">Geen enkele geïnstalleerde app kan dit document openen.</string>
+
+    <string name="settings_title">Instellingen</string>
+    <string name="settings_theme">Thema</string>
+    <string name="theme_follow_system">Systeem volgen</string>
+    <string name="theme_light">Licht</string>
+    <string name="theme_dark">Donker</string>
+    <string name="settings_language">Taal</string>
+    <string name="language_system_default">Systeemtaal</string>
+    <string name="settings_notifications">Meldingen</string>
+    <string name="notification_off_label">Uit</string>
+    <string name="notification_off_description">Geen meldingen over te ondertekenen documenten.</string>
+    <string name="notification_background_label">Achtergrondcontrole</string>
+    <string name="notification_background_description">Controleert periodiek (ongeveer elke 15 minuten) - geen extra app nodig.</string>
+    <string name="notification_instant_label">Direct</string>
+    <string name="notification_instant_description">Meteen een melding wanneer een document je handtekening nodig heeft - vereist een kleine hulp-app (zie hieronder).</string>
+    <string name="notification_instant_active">Je krijgt een melding zodra een document je handtekening nodig heeft, met de achtergrondcontrole als back-up.</string>
+    <string name="notification_instant_guidance">Installeer een kleine gratis hulp-app genaamd \"ntfy\" voor directe bezorging - deze heeft geen account of configuratie nodig, installeer hem gewoon en kom hierheen terug. Tot die tijd dekt de achtergrondcontrole je nog steeds.</string>
+    <string name="install_ntfy_button">ntfy installeren</string>
+
+    <string name="about_title">Over</string>
+    <string name="about_version">Versie %1$s</string>
+    <string name="about_description">Een native Android-client voor LibreSign, de elektronische handtekening-app voor Nextcloud. Het bereidt geen documenten voor en plaatst geen handtekeningvelden - dat gebeurt elders. NextSign toont wat op je handtekening wacht en ondertekent het met een tik via LibreSigns click-to-sign-methode.</string>
+
+    <string name="signature_title">Handtekening</string>
+    <string name="signature_has_signature_description">Je hebt een handtekeningafbeelding ingesteld. Documenten met een zichtbaar handtekeningveld gebruiken deze bij het ondertekenen.</string>
+    <string name="signature_no_signature_description">Kies een afbeelding van je handtekening, of teken er een. Documenten met een zichtbaar handtekeningveld gebruiken deze bij het ondertekenen.</string>
+    <string name="signature_preview_content_description">Voorbeeld van handtekening</string>
+    <string name="draw_signature_button">Handtekening tekenen</string>
+    <string name="saving_in_progress">Opslaan…</string>
+    <string name="pick_image_button">Een afbeelding kiezen</string>
+    <string name="signature_setup_error_bad_image">Kon de geselecteerde afbeelding niet gebruiken. Probeer een kleinere afbeelding.</string>
+
+    <string name="draw_signature_title">Teken je handtekening</string>
+    <string name="draw_signature_hint">Onderteken met je vinger of een stylus en tik dan op Opslaan. Het apparaat draaien geeft meer ruimte om te tekenen.</string>
+    <string name="clear_button">Wissen</string>
+    <string name="save_button">Opslaan</string>
+
+    <string name="document_location_unknown">De locatie van dit document is onbekend.</string>
+    <string name="cache_dir_prepare_failed">De cachemap kon niet worden voorbereid.</string>
+    <string name="downloaded_file_empty">Het gedownloade bestand is leeg.</string>
+    <string name="libresign_unexpected_response">LibreSign gaf een onverwacht antwoord terug.</string>
+    <string name="action_libresign_request">LibreSign-verzoek</string>
+    <string name="action_signing">Ondertekenen</string>
+    <string name="action_validation">Validatie</string>
+    <string name="action_saving_signature">Je handtekening opslaan</string>
+    <string name="error_action_failed_http">%1$s is mislukt met HTTP %2$d.</string>
+
+    <string name="notification_channel_name">Meldingen</string>
+    <string name="notification_channel_badge_name">Openstaande documenten</string>
+    <string name="poll_new_document_notification">\"%1$s\" is klaar om te ondertekenen</string>
+</resources>

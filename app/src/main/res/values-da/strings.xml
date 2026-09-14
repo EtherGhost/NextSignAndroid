@@ -1,0 +1,122 @@
+<resources>
+    <!-- Deliberately no about_license_*/about_disclaimer_* entries here - see the
+         comment in values/strings.xml. Falls back to the English default. -->
+
+    <string name="sign_in_button">Log ind med Nextcloud</string>
+    <string name="sign_in_error_no_nextcloud">Nextcloud-appen kræves for at logge ind. Installer den fra Play Store, opsæt din konto der, og prøv igen.</string>
+    <string name="sign_in_error_picker_failed">Kunne ikke åbne kontovælgeren. Sørg for, at Nextcloud-appen er installeret og opsat på denne enhed.</string>
+    <string name="sign_in_error_generic">Kunne ikke starte Nextcloud-login: %1$s</string>
+    <string name="install_nextcloud_button">Installer Nextcloud</string>
+    <string name="account_import_canceled">Kontoimport annulleret.</string>
+    <string name="account_switch_failed">Kunne ikke skifte til den konto.</string>
+
+    <string name="drawer_account">Konto</string>
+    <string name="drawer_signature">Signatur</string>
+    <string name="drawer_settings">Indstillinger</string>
+    <string name="drawer_about">Om</string>
+    <string name="menu_content_description">Menu</string>
+
+    <string name="refresh_content_description">Opdater</string>
+    <string name="signed_in_as">Logget ind som %1$s</string>
+    <string name="switch_account_content_description">Skift konto</string>
+
+    <string name="sort_needs_signature_first">Skal underskrives først</string>
+    <string name="sort_newest_first">Nyeste først</string>
+    <string name="sort_oldest_first">Ældste først</string>
+    <string name="sort_name_asc">Navn (A-Å)</string>
+
+    <string name="account_switcher_title">Skift konto</string>
+    <string name="account_switcher_current">Nuværende</string>
+    <string name="account_switcher_add_account">Tilføj en anden konto</string>
+    <string name="account_switcher_sign_out">Log ud</string>
+    <string name="sign_out_confirm_title">Log ud?</string>
+    <string name="sign_out_confirm_message">Du skal logge ind igen for at se dine dokumenter.</string>
+    <string name="sign_out_switch_confirm_message">Dette glemmer den nuværende konto - du skal logge helt ind igen for at bruge den. NextSign fortsætter med %1$s.</string>
+
+    <string name="close_button">Luk</string>
+    <string name="back_content_description">Tilbage</string>
+    <string name="cancel_button">Annuller</string>
+
+    <string name="document_list_empty">Ingen dokumenter endnu.</string>
+    <string name="document_untitled">Unavngivet dokument</string>
+    <string name="document_requested_by">Anmodet af %1$s</string>
+
+    <string name="status_ready_to_sign">Klar til underskrift</string>
+    <string name="status_partially_signed">Delvist underskrevet</string>
+    <string name="status_waiting_on_others">Venter på andre</string>
+    <string name="document_row_menu_content_description">Dokumentindstillinger</string>
+    <string name="status_signed">Underskrevet</string>
+
+    <string name="document_unknown_signer">Ukendt underskriver</string>
+    <string name="document_message_from_requester">Besked fra anmoderen</string>
+    <string name="sign_document_button">Underskriv dokument</string>
+    <string name="signing_in_progress">Underskriver…</string>
+    <string name="validation_info_button">Valideringsinfo</string>
+    <string name="validating_in_progress">Validerer…</string>
+    <string name="open_file_button">Åbn fil</string>
+    <string name="opening_in_progress">Åbner…</string>
+    <string name="open_with_chooser_title">Åbn med</string>
+
+    <string name="sign_confirm_title">Underskriv dette dokument?</string>
+    <string name="sign_confirm_message">Dette underskriver \"%1$s\" med LibreSigns click-to-sign-metode. Dette kan ikke fortrydes.</string>
+    <string name="sign_button">Underskriv</string>
+
+    <string name="signed_dialog_title">Underskrevet</string>
+    <string name="signed_dialog_message">\"%1$s\" er blevet underskrevet.</string>
+    <string name="sign_error_dialog_title">Kunne ikke underskrive dokumentet</string>
+    <string name="validation_result_dialog_title">Signaturvalidering</string>
+    <string name="validation_error_dialog_title">Kunne ikke validere dokumentet</string>
+    <string name="open_file_error_dialog_title">Kunne ikke åbne dokumentet</string>
+    <string name="sign_error_no_sign_uuid">Kunne ikke fastslå din underskriftanmodning for dette dokument.</string>
+    <string name="open_file_no_app">Ingen installeret app kan åbne dette dokument.</string>
+
+    <string name="settings_title">Indstillinger</string>
+    <string name="settings_theme">Tema</string>
+    <string name="theme_follow_system">Følg systemet</string>
+    <string name="theme_light">Lyst</string>
+    <string name="theme_dark">Mørkt</string>
+    <string name="settings_language">Sprog</string>
+    <string name="language_system_default">Systemsprog</string>
+    <string name="settings_notifications">Notifikationer</string>
+    <string name="notification_off_label">Fra</string>
+    <string name="notification_off_description">Ingen notifikationer om dokumenter, der skal underskrives.</string>
+    <string name="notification_background_label">Baggrundstjek</string>
+    <string name="notification_background_description">Tjekker med jævne mellemrum (cirka hvert 15. minut) - ingen ekstra app nødvendig.</string>
+    <string name="notification_instant_label">Øjeblikkelig</string>
+    <string name="notification_instant_description">Får besked med det samme, når et dokument har brug for din underskrift - kræver en lille hjælpeapp installeret (se nedenfor).</string>
+    <string name="notification_instant_active">Du får besked, så snart et dokument har brug for din underskrift, med baggrundstjekket som backup.</string>
+    <string name="notification_instant_guidance">Installer en lille gratis hjælpeapp kaldet \"ntfy\" for øjeblikkelig levering - den kræver hverken konto eller opsætning, installer den bare og kom tilbage her. Indtil da dækker baggrundstjekket dig stadig.</string>
+    <string name="install_ntfy_button">Installer ntfy</string>
+
+    <string name="about_title">Om</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_description">En native Android-klient til LibreSign, den elektroniske underskriftsapp til Nextcloud. Den forbereder ikke dokumenter eller placerer underskriftsfelter - det sker et andet sted. NextSign viser, hvad der venter på din underskrift, og underskriver det med et tryk via LibreSigns click-to-sign-metode.</string>
+
+    <string name="signature_title">Signatur</string>
+    <string name="signature_has_signature_description">Du har opsat et underskriftsbillede. Dokumenter med et synligt underskriftsfelt vil bruge det, når du underskriver.</string>
+    <string name="signature_no_signature_description">Vælg et billede af din underskrift, eller tegn en. Dokumenter med et synligt underskriftsfelt vil bruge det, når du underskriver.</string>
+    <string name="signature_preview_content_description">Forhåndsvisning af underskrift</string>
+    <string name="draw_signature_button">Tegn underskrift</string>
+    <string name="saving_in_progress">Gemmer…</string>
+    <string name="pick_image_button">Vælg et billede</string>
+    <string name="signature_setup_error_bad_image">Kunne ikke bruge det valgte billede. Prøv et mindre billede.</string>
+
+    <string name="draw_signature_title">Tegn din underskrift</string>
+    <string name="draw_signature_hint">Underskriv med fingeren eller en pen, og tryk derefter på Gem. Roter enheden for at få mere plads at tegne på.</string>
+    <string name="clear_button">Ryd</string>
+    <string name="save_button">Gem</string>
+
+    <string name="document_location_unknown">Dette dokuments placering er ukendt.</string>
+    <string name="cache_dir_prepare_failed">Cachemappen kunne ikke forberedes.</string>
+    <string name="downloaded_file_empty">Den downloadede fil er tom.</string>
+    <string name="libresign_unexpected_response">LibreSign returnerede et uventet svar.</string>
+    <string name="action_libresign_request">LibreSign-forespørgsel</string>
+    <string name="action_signing">Underskrivning</string>
+    <string name="action_validation">Validering</string>
+    <string name="action_saving_signature">Gemmer din underskrift</string>
+    <string name="error_action_failed_http">%1$s mislykkedes med HTTP %2$d.</string>
+
+    <string name="notification_channel_name">Notifikationer</string>
+    <string name="notification_channel_badge_name">Ventende dokumenter</string>
+    <string name="poll_new_document_notification">\"%1$s\" er klar til underskrift</string>
+</resources>

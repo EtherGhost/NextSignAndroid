@@ -1,0 +1,122 @@
+<resources>
+    <!-- Deliberately no about_license_*/about_disclaimer_* entries here - see the
+         comment in values/strings.xml. Falls back to the English default. -->
+
+    <string name="sign_in_button">Iniciar sesión con Nextcloud</string>
+    <string name="sign_in_error_no_nextcloud">Se necesita la aplicación de Nextcloud para iniciar sesión. Instálala desde Play Store, configura tu cuenta allí y vuelve a intentarlo.</string>
+    <string name="sign_in_error_picker_failed">No se pudo abrir el selector de cuentas. Asegúrate de que la aplicación de Nextcloud esté instalada y configurada en este dispositivo.</string>
+    <string name="sign_in_error_generic">No se pudo iniciar el inicio de sesión de Nextcloud: %1$s</string>
+    <string name="install_nextcloud_button">Instalar Nextcloud</string>
+    <string name="account_import_canceled">Importación de cuenta cancelada.</string>
+    <string name="account_switch_failed">No se pudo cambiar a esa cuenta.</string>
+
+    <string name="drawer_account">Cuenta</string>
+    <string name="drawer_signature">Firma</string>
+    <string name="drawer_settings">Ajustes</string>
+    <string name="drawer_about">Acerca de</string>
+    <string name="menu_content_description">Menú</string>
+
+    <string name="refresh_content_description">Actualizar</string>
+    <string name="signed_in_as">Sesión iniciada como %1$s</string>
+    <string name="switch_account_content_description">Cambiar de cuenta</string>
+
+    <string name="sort_needs_signature_first">Por firmar primero</string>
+    <string name="sort_newest_first">Más recientes primero</string>
+    <string name="sort_oldest_first">Más antiguos primero</string>
+    <string name="sort_name_asc">Nombre (A-Z)</string>
+
+    <string name="account_switcher_title">Cambiar de cuenta</string>
+    <string name="account_switcher_current">Actual</string>
+    <string name="account_switcher_add_account">Añadir otra cuenta</string>
+    <string name="account_switcher_sign_out">Cerrar sesión</string>
+    <string name="sign_out_confirm_title">¿Cerrar sesión?</string>
+    <string name="sign_out_confirm_message">Tendrás que volver a iniciar sesión para ver tus documentos.</string>
+    <string name="sign_out_switch_confirm_message">Esto olvida la cuenta actual - tendrás que iniciar sesión por completo de nuevo para volver a usarla. NextSign continuará con %1$s.</string>
+
+    <string name="close_button">Cerrar</string>
+    <string name="back_content_description">Atrás</string>
+    <string name="cancel_button">Cancelar</string>
+
+    <string name="document_list_empty">Aún no hay documentos.</string>
+    <string name="document_untitled">Documento sin título</string>
+    <string name="document_requested_by">Solicitado por %1$s</string>
+
+    <string name="status_ready_to_sign">Listo para firmar</string>
+    <string name="status_partially_signed">Firmado parcialmente</string>
+    <string name="status_waiting_on_others">Esperando a otros</string>
+    <string name="document_row_menu_content_description">Opciones del documento</string>
+    <string name="status_signed">Firmado</string>
+
+    <string name="document_unknown_signer">Firmante desconocido</string>
+    <string name="document_message_from_requester">Mensaje del solicitante</string>
+    <string name="sign_document_button">Firmar documento</string>
+    <string name="signing_in_progress">Firmando…</string>
+    <string name="validation_info_button">Información de validación</string>
+    <string name="validating_in_progress">Validando…</string>
+    <string name="open_file_button">Abrir archivo</string>
+    <string name="opening_in_progress">Abriendo…</string>
+    <string name="open_with_chooser_title">Abrir con</string>
+
+    <string name="sign_confirm_title">¿Firmar este documento?</string>
+    <string name="sign_confirm_message">Esto firmará \"%1$s\" usando el método click-to-sign de LibreSign. Esta acción no se puede deshacer.</string>
+    <string name="sign_button">Firmar</string>
+
+    <string name="signed_dialog_title">Firmado</string>
+    <string name="signed_dialog_message">\"%1$s\" ha sido firmado.</string>
+    <string name="sign_error_dialog_title">No se pudo firmar el documento</string>
+    <string name="validation_result_dialog_title">Validación de la firma</string>
+    <string name="validation_error_dialog_title">No se pudo validar el documento</string>
+    <string name="open_file_error_dialog_title">No se pudo abrir el documento</string>
+    <string name="sign_error_no_sign_uuid">No se pudo determinar tu solicitud de firma para este documento.</string>
+    <string name="open_file_no_app">Ninguna aplicación instalada puede abrir este documento.</string>
+
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_theme">Tema</string>
+    <string name="theme_follow_system">Seguir el sistema</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Oscuro</string>
+    <string name="settings_language">Idioma</string>
+    <string name="language_system_default">Idioma del sistema</string>
+    <string name="settings_notifications">Notificaciones</string>
+    <string name="notification_off_label">Desactivadas</string>
+    <string name="notification_off_description">Sin notificaciones sobre documentos para firmar.</string>
+    <string name="notification_background_label">Comprobación en segundo plano</string>
+    <string name="notification_background_description">Comprueba periódicamente (aproximadamente cada 15 minutos) - no necesita una aplicación adicional.</string>
+    <string name="notification_instant_label">Instantáneas</string>
+    <string name="notification_instant_description">Se te notifica de inmediato cuando un documento necesita tu firma - requiere instalar una pequeña aplicación auxiliar (ver abajo).</string>
+    <string name="notification_instant_active">Se te notificará en cuanto un documento necesite tu firma, con la comprobación en segundo plano como respaldo.</string>
+    <string name="notification_instant_guidance">Instala una pequeña aplicación gratuita llamada \"ntfy\" para la entrega instantánea - no necesita cuenta ni configuración, solo instálala y vuelve aquí. Hasta entonces, la comprobación en segundo plano te sigue cubriendo.</string>
+    <string name="install_ntfy_button">Instalar ntfy</string>
+
+    <string name="about_title">Acerca de</string>
+    <string name="about_version">Versión %1$s</string>
+    <string name="about_description">Un cliente nativo de Android para LibreSign, la aplicación de firma electrónica de Nextcloud. No prepara documentos ni coloca campos de firma - eso ocurre en otro lugar. NextSign muestra lo que espera tu firma y lo firma con un toque usando el método click-to-sign de LibreSign.</string>
+
+    <string name="signature_title">Firma</string>
+    <string name="signature_has_signature_description">Tienes una imagen de firma configurada. Los documentos con un campo de firma visible la usarán al firmar.</string>
+    <string name="signature_no_signature_description">Elige una imagen de tu firma, o dibuja una. Los documentos con un campo de firma visible la usarán al firmar.</string>
+    <string name="signature_preview_content_description">Vista previa de la firma</string>
+    <string name="draw_signature_button">Dibujar firma</string>
+    <string name="saving_in_progress">Guardando…</string>
+    <string name="pick_image_button">Elegir una imagen</string>
+    <string name="signature_setup_error_bad_image">No se pudo usar la imagen seleccionada. Prueba con una imagen más pequeña.</string>
+
+    <string name="draw_signature_title">Dibuja tu firma</string>
+    <string name="draw_signature_hint">Firma con el dedo o un lápiz óptico y luego pulsa Guardar. Girar el dispositivo te da más espacio para dibujar.</string>
+    <string name="clear_button">Borrar</string>
+    <string name="save_button">Guardar</string>
+
+    <string name="document_location_unknown">Se desconoce la ubicación de este documento.</string>
+    <string name="cache_dir_prepare_failed">No se pudo preparar el directorio de caché.</string>
+    <string name="downloaded_file_empty">El archivo descargado está vacío.</string>
+    <string name="libresign_unexpected_response">LibreSign devolvió una respuesta inesperada.</string>
+    <string name="action_libresign_request">Solicitud a LibreSign</string>
+    <string name="action_signing">Firma</string>
+    <string name="action_validation">Validación</string>
+    <string name="action_saving_signature">Guardando tu firma</string>
+    <string name="error_action_failed_http">%1$s falló con HTTP %2$d.</string>
+
+    <string name="notification_channel_name">Notificaciones</string>
+    <string name="notification_channel_badge_name">Documentos pendientes</string>
+    <string name="poll_new_document_notification">\"%1$s\" está listo para firmar</string>
+</resources>

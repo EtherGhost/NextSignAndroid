@@ -6,6 +6,7 @@ import androidx.compose.ui.res.stringResource
 import se.cloudsite.nextsign.R
 import se.cloudsite.nextsign.ui.theme.NextSignBlue
 import se.cloudsite.nextsign.ui.theme.NextSignGreen
+import se.cloudsite.nextsign.ui.theme.NextSignGrey
 
 data class LibreSignDocument(
     val uuid: String,
@@ -45,7 +46,16 @@ data class VisibleElementRef(
 
 @Composable
 fun statusLabel(fileStatus: Int, canSignNow: Boolean): String = when (fileStatus) {
-    1 -> stringResource(R.string.status_ready_to_sign)
+    // fileStatus==1 means nobody has signed yet file-wide, so !canSignNow here can only
+    // mean this account isn't a signer on the document at all (mySigner == null) - if it
+    // were a signer, nobody-signed-yet would make canSignNow true. Reuses the same
+    // "waiting on others" wording as the fileStatus==2 case below - same underlying
+    // meaning, "no action expected from you here".
+    1 -> if (canSignNow) {
+        stringResource(R.string.status_ready_to_sign)
+    } else {
+        stringResource(R.string.status_waiting_on_others)
+    }
     // Partially signed: still says so if it's this signer's turn, but once their own
     // part is done the doc is just waiting on the remaining signers, not on them.
     2 -> if (canSignNow) {
@@ -57,7 +67,13 @@ fun statusLabel(fileStatus: Int, canSignNow: Boolean): String = when (fileStatus
     else -> ""
 }
 
-// Nothing left for this signer to do (fully signed, or their own part of a
-// partially-signed doc) is green; still owed by this signer is blue.
-fun statusColor(fileStatus: Int, canSignNow: Boolean): Color =
-    if (fileStatus == 3 || (fileStatus == 2 && !canSignNow)) NextSignGreen else NextSignBlue
+// Blue: a signature is still owed by this signer. Green: nothing left for THIS signer
+// to do, but they were genuinely part of it (fully signed, or their own part of a
+// partially-signed doc). Grey: this signer isn't part of the document at all (only
+// possible when fileStatus==1, see statusLabel) - distinct from green so it never reads
+// as "you signed this" when you never had a part to play.
+fun statusColor(fileStatus: Int, canSignNow: Boolean): Color = when {
+    fileStatus == 1 && !canSignNow -> NextSignGrey
+    fileStatus == 3 || (fileStatus == 2 && !canSignNow) -> NextSignGreen
+    else -> NextSignBlue
+}

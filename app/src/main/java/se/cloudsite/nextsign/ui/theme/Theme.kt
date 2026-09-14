@@ -16,6 +16,11 @@ val NextSignBlue = Color(0xFF1F6FEB)
 // there's nothing left to do. Used wherever a document/signer status needs a color.
 val NextSignGreen = Color(0xFF5A8F3C)
 
+// Neutral: this document doesn't involve this account as a signer at all (e.g. one it
+// created/requested but never added itself to) - distinct from green, which specifically
+// means "your part is done", not "you were never part of this".
+val NextSignGrey = Color(0xFF757575)
+
 private val LightColors = lightColorScheme(primary = NextSignBlue)
 private val DarkColors = darkColorScheme(primary = NextSignBlue)
 

@@ -72,6 +72,7 @@ class DocumentPollWorker(
         }
 
         SeenDocumentsStore.markSeen(applicationContext, documents.map { it.uuid }.toSet())
+        PendingSignatureBadges.sync(applicationContext, documents)
         return Result.success()
     }
 

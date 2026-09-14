@@ -1,0 +1,122 @@
+<resources>
+    <!-- Deliberately no about_license_*/about_disclaimer_* entries here - see the
+         comment in values/strings.xml. Falls back to the English default. -->
+
+    <string name="sign_in_button">Войти через Nextcloud</string>
+    <string name="sign_in_error_no_nextcloud">Для входа требуется приложение Nextcloud. Установите его из Play Store, настройте там свою учётную запись и повторите попытку.</string>
+    <string name="sign_in_error_picker_failed">Не удалось открыть выбор учётной записи. Убедитесь, что приложение Nextcloud установлено и настроено на этом устройстве.</string>
+    <string name="sign_in_error_generic">Не удалось начать вход через Nextcloud: %1$s</string>
+    <string name="install_nextcloud_button">Установить Nextcloud</string>
+    <string name="account_import_canceled">Импорт учётной записи отменён.</string>
+    <string name="account_switch_failed">Не удалось переключиться на эту учётную запись.</string>
+
+    <string name="drawer_account">Учётная запись</string>
+    <string name="drawer_signature">Подпись</string>
+    <string name="drawer_settings">Настройки</string>
+    <string name="drawer_about">О приложении</string>
+    <string name="menu_content_description">Меню</string>
+
+    <string name="refresh_content_description">Обновить</string>
+    <string name="signed_in_as">Вход выполнен как %1$s</string>
+    <string name="switch_account_content_description">Сменить учётную запись</string>
+
+    <string name="sort_needs_signature_first">Сначала на подпись</string>
+    <string name="sort_newest_first">Сначала новые</string>
+    <string name="sort_oldest_first">Сначала старые</string>
+    <string name="sort_name_asc">По имени (А-Я)</string>
+
+    <string name="account_switcher_title">Сменить учётную запись</string>
+    <string name="account_switcher_current">Текущая</string>
+    <string name="account_switcher_add_account">Добавить ещё одну учётную запись</string>
+    <string name="account_switcher_sign_out">Выйти</string>
+    <string name="sign_out_confirm_title">Выйти?</string>
+    <string name="sign_out_confirm_message">Чтобы снова увидеть свои документы, вам нужно будет войти заново.</string>
+    <string name="sign_out_switch_confirm_message">Это приведёт к забыванию текущей учётной записи - чтобы снова её использовать, потребуется полный повторный вход. NextSign продолжит работу с %1$s.</string>
+
+    <string name="close_button">Закрыть</string>
+    <string name="back_content_description">Назад</string>
+    <string name="cancel_button">Отмена</string>
+
+    <string name="document_list_empty">Пока нет документов.</string>
+    <string name="document_untitled">Документ без названия</string>
+    <string name="document_requested_by">Запрошено пользователем %1$s</string>
+
+    <string name="status_ready_to_sign">Готов к подписанию</string>
+    <string name="status_partially_signed">Частично подписан</string>
+    <string name="status_waiting_on_others">Ожидает остальных</string>
+    <string name="document_row_menu_content_description">Параметры документа</string>
+    <string name="status_signed">Подписан</string>
+
+    <string name="document_unknown_signer">Неизвестный подписант</string>
+    <string name="document_message_from_requester">Сообщение от запросившего</string>
+    <string name="sign_document_button">Подписать документ</string>
+    <string name="signing_in_progress">Подписание…</string>
+    <string name="validation_info_button">Сведения о проверке</string>
+    <string name="validating_in_progress">Проверка…</string>
+    <string name="open_file_button">Открыть файл</string>
+    <string name="opening_in_progress">Открытие…</string>
+    <string name="open_with_chooser_title">Открыть с помощью</string>
+
+    <string name="sign_confirm_title">Подписать этот документ?</string>
+    <string name="sign_confirm_message">Это подпишет \"%1$s\" методом click-to-sign LibreSign. Это действие нельзя отменить.</string>
+    <string name="sign_button">Подписать</string>
+
+    <string name="signed_dialog_title">Подписано</string>
+    <string name="signed_dialog_message">\"%1$s\" подписан.</string>
+    <string name="sign_error_dialog_title">Не удалось подписать документ</string>
+    <string name="validation_result_dialog_title">Проверка подписи</string>
+    <string name="validation_error_dialog_title">Не удалось проверить документ</string>
+    <string name="open_file_error_dialog_title">Не удалось открыть документ</string>
+    <string name="sign_error_no_sign_uuid">Не удалось определить ваш запрос на подпись для этого документа.</string>
+    <string name="open_file_no_app">Ни одно установленное приложение не может открыть этот документ.</string>
+
+    <string name="settings_title">Настройки</string>
+    <string name="settings_theme">Тема</string>
+    <string name="theme_follow_system">Как в системе</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="settings_language">Язык</string>
+    <string name="language_system_default">Язык системы</string>
+    <string name="settings_notifications">Уведомления</string>
+    <string name="notification_off_label">Отключены</string>
+    <string name="notification_off_description">Нет уведомлений о документах на подпись.</string>
+    <string name="notification_background_label">Фоновая проверка</string>
+    <string name="notification_background_description">Периодическая проверка (примерно каждые 15 минут) - дополнительное приложение не требуется.</string>
+    <string name="notification_instant_label">Мгновенные</string>
+    <string name="notification_instant_description">Мгновенное уведомление, когда документу требуется ваша подпись - требует установки небольшого вспомогательного приложения (см. ниже).</string>
+    <string name="notification_instant_active">Вы будете уведомлены, как только документу потребуется ваша подпись, а фоновая проверка послужит подстраховкой.</string>
+    <string name="notification_instant_guidance">Установите небольшое бесплатное приложение \"ntfy\" для мгновенной доставки уведомлений - оно не требует учётной записи или настройки, просто установите его и вернитесь сюда. А пока фоновая проверка по-прежнему вас подстраховывает.</string>
+    <string name="install_ntfy_button">Установить ntfy</string>
+
+    <string name="about_title">О приложении</string>
+    <string name="about_version">Версия %1$s</string>
+    <string name="about_description">Нативный клиент Android для LibreSign - приложения электронной подписи для Nextcloud. Оно не подготавливает документы и не размещает поля подписи - это происходит в другом месте. NextSign показывает, что ожидает вашей подписи, и подписывает это одним касанием с помощью метода click-to-sign LibreSign.</string>
+
+    <string name="signature_title">Подпись</string>
+    <string name="signature_has_signature_description">У вас настроено изображение подписи. Документы с видимым полем подписи будут использовать его при подписании.</string>
+    <string name="signature_no_signature_description">Выберите изображение своей подписи или нарисуйте её. Документы с видимым полем подписи будут использовать её при подписании.</string>
+    <string name="signature_preview_content_description">Предпросмотр подписи</string>
+    <string name="draw_signature_button">Нарисовать подпись</string>
+    <string name="saving_in_progress">Сохранение…</string>
+    <string name="pick_image_button">Выбрать изображение</string>
+    <string name="signature_setup_error_bad_image">Не удалось использовать выбранное изображение. Попробуйте изображение меньшего размера.</string>
+
+    <string name="draw_signature_title">Нарисуйте свою подпись</string>
+    <string name="draw_signature_hint">Распишитесь пальцем или стилусом, затем нажмите «Сохранить». Поворот устройства даёт больше места для рисования.</string>
+    <string name="clear_button">Очистить</string>
+    <string name="save_button">Сохранить</string>
+
+    <string name="document_location_unknown">Расположение этого документа неизвестно.</string>
+    <string name="cache_dir_prepare_failed">Не удалось подготовить каталог кэша.</string>
+    <string name="downloaded_file_empty">Загруженный файл пуст.</string>
+    <string name="libresign_unexpected_response">LibreSign вернул неожиданный ответ.</string>
+    <string name="action_libresign_request">Запрос к LibreSign</string>
+    <string name="action_signing">Подписание</string>
+    <string name="action_validation">Проверка</string>
+    <string name="action_saving_signature">Сохранение вашей подписи</string>
+    <string name="error_action_failed_http">%1$s не выполнено, код HTTP %2$d.</string>
+
+    <string name="notification_channel_name">Уведомления</string>
+    <string name="notification_channel_badge_name">Ожидающие документы</string>
+    <string name="poll_new_document_notification">\"%1$s\" готов к подписанию</string>
+</resources>

@@ -2,6 +2,7 @@ package se.cloudsite.nextsign
 
 import android.Manifest
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -77,6 +78,7 @@ import se.cloudsite.nextsign.model.SignatureElement
 import se.cloudsite.nextsign.model.ValidationSummary
 import se.cloudsite.nextsign.network.ApiProvider
 import se.cloudsite.nextsign.push.DocumentPollWorker
+import se.cloudsite.nextsign.push.PendingSignatureBadges
 import se.cloudsite.nextsign.repository.DocumentDownloader
 import se.cloudsite.nextsign.repository.DownloadResult
 import se.cloudsite.nextsign.repository.LibreSignRepository
@@ -99,6 +101,8 @@ import se.cloudsite.nextsign.ui.signature.SignatureDrawScreen
 import se.cloudsite.nextsign.ui.signature.SignatureSetupScreen
 import se.cloudsite.nextsign.ui.theme.NextSignTheme
 import se.cloudsite.nextsign.util.AccountHistory
+import se.cloudsite.nextsign.util.LanguagePreference
+import se.cloudsite.nextsign.util.LocaleHelper
 import se.cloudsite.nextsign.util.NotificationMode
 import se.cloudsite.nextsign.util.PushPreference
 import se.cloudsite.nextsign.util.SeenDocumentsStore
@@ -114,6 +118,14 @@ private enum class Screen { DOCUMENT_LIST, SIGNATURE_SETUP, SIGNATURE_DRAW, SETT
 // inspecting the actual AAR), only on the library's unreleased master branch. This is
 // the same pattern the real Nextcloud Notes/Deck apps ship with today.
 class MainActivity : ComponentActivity() {
+
+    // Applied here too, not just in NextSignApplication - an Activity's own base
+    // Context is a fresh wrap of the application Context, not guaranteed to inherit an
+    // already-overridden Configuration, and this is also what picks up a language
+    // change on the recreate() setLanguage() triggers.
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(LocaleHelper.wrap(newBase))
+    }
 
     private val repository by lazy { LibreSignRepository(applicationContext) }
     private val documentDownloader by lazy { DocumentDownloader(applicationContext) }
@@ -145,7 +157,7 @@ class MainActivity : ComponentActivity() {
     // from avatarBitmap (which only ever holds the CURRENT account's avatar, for the
     // top-bar button). Populated lazily via loadAccountAvatars() when that screen opens.
     private var accountAvatars: Map<String, Bitmap?> by mutableStateOf(emptyMap())
-    private var sortMode: SortMode by mutableStateOf(SortMode.DATE_DESC)
+    private var sortMode: SortMode by mutableStateOf(SortMode.NEEDS_SIGNATURE_FIRST)
     // { "signature": nodeId, "initial": nodeId, ... } - the account's own registered
     // signature/initials images, needed alongside a document's placeholder position to
     // render a visible mark when signing. Empty until loadSignatureElements() returns.
@@ -158,6 +170,7 @@ class MainActivity : ComponentActivity() {
 
     private var themeMode: ThemeMode by mutableStateOf(ThemeMode.SYSTEM)
     private var notificationMode: NotificationMode by mutableStateOf(NotificationMode.INSTANT)
+    private var languageTag: String? by mutableStateOf(null)
 
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
@@ -175,6 +188,7 @@ class MainActivity : ComponentActivity() {
 
         themeMode = ThemePreference.get(this)
         notificationMode = PushPreference.getMode(this)
+        languageTag = LanguagePreference.get(this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -388,6 +402,8 @@ class MainActivity : ComponentActivity() {
                                     themeMode = mode
                                     ThemePreference.set(this@MainActivity, mode)
                                 },
+                                languageTag = languageTag,
+                                onLanguageSelected = { tag -> setLanguage(tag) },
                                 notificationMode = notificationMode,
                                 onNotificationModeSelected = { onNotificationModeChanged(it) },
                                 // Live device state, not app state - re-checked each time
@@ -638,6 +654,7 @@ class MainActivity : ComponentActivity() {
                     // about it - keeps DocumentPollWorker (Tier 1) from later treating
                     // something the user already saw here as a new arrival.
                     SeenDocumentsStore.markSeen(applicationContext, result.documents.map { it.uuid }.toSet())
+                    PendingSignatureBadges.sync(applicationContext, result.documents)
                 }
                 is LoadDocumentsResult.Failure -> {
                     errorMessage = result.message
@@ -895,6 +912,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // recreate() rather than just updating languageTag - Compose's stringResource()
+    // reads resources through the Activity's own Configuration, which only reflects a
+    // new locale once attachBaseContext() runs again on a fresh Activity instance,
+    // not by recomposing the existing one.
+    private fun setLanguage(tag: String?) {
+        LanguagePreference.set(this, tag)
+        recreate()
+    }
+
     private fun saveSignatureElement(account: SingleSignOnAccount, dataUri: String) {
         savingSignatureElement = true
         signatureSetupError = ""
@@ -985,6 +1011,7 @@ private fun SignOutConfirmDialog(nextAccountName: String?, onConfirm: () -> Unit
 
 @Composable
 private fun SortMode.label(): String = when (this) {
+    SortMode.NEEDS_SIGNATURE_FIRST -> stringResource(R.string.sort_needs_signature_first)
     SortMode.DATE_DESC -> stringResource(R.string.sort_newest_first)
     SortMode.DATE_ASC -> stringResource(R.string.sort_oldest_first)
     SortMode.NAME_ASC -> stringResource(R.string.sort_name_asc)
