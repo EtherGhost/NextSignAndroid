@@ -3,7 +3,7 @@
          comment in values/strings.xml. Falls back to the English default. -->
 
     <string name="sign_in_button">Se connecter avec Nextcloud</string>
-    <string name="sign_in_error_no_nextcloud">L\'application Nextcloud est nécessaire pour se connecter. Installez-la depuis le Play Store, configurez-y votre compte, puis réessayez.</string>
+    <string name="sign_in_error_no_nextcloud">NextSign signe les documents via votre compte Nextcloud, c\'est pourquoi l\'application Nextcloud est nécessaire pour se connecter. Installez-la depuis le Play Store, configurez-y votre compte, puis réessayez.</string>
     <string name="sign_in_error_picker_failed">Impossible d\'ouvrir le sélecteur de compte. Vérifiez que l\'application Nextcloud est installée et configurée sur cet appareil.</string>
     <string name="sign_in_error_generic">Impossible de démarrer la connexion Nextcloud : %1$s</string>
     <string name="install_nextcloud_button">Installer Nextcloud</string>

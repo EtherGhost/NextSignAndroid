@@ -3,7 +3,7 @@
 
     <!-- Sign in -->
     <string name="sign_in_button">Sign in with Nextcloud</string>
-    <string name="sign_in_error_no_nextcloud">The Nextcloud app is required to sign in. Install it from the Play Store, set up your account there, then try again.</string>
+    <string name="sign_in_error_no_nextcloud">NextSign signs documents through your Nextcloud account, so the Nextcloud app is required to sign in. Install it from the Play Store, set up your account there, then try again.</string>
     <string name="sign_in_error_picker_failed">Could not open the account picker. Make sure the Nextcloud app is installed and set up on this device.</string>
     <string name="sign_in_error_generic">Could not start Nextcloud sign-in: %1$s</string>
     <string name="install_nextcloud_button">Install Nextcloud</string>

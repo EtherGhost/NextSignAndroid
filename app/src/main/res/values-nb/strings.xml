@@ -3,7 +3,7 @@
          comment in values/strings.xml. Falls back to the English default. -->
 
     <string name="sign_in_button">Logg inn med Nextcloud</string>
-    <string name="sign_in_error_no_nextcloud">Nextcloud-appen kreves for å logge inn. Installer den fra Play Store, sett opp kontoen din der, og prøv igjen.</string>
+    <string name="sign_in_error_no_nextcloud">NextSign signerer dokumenter via Nextcloud-kontoen din, så Nextcloud-appen kreves for å logge inn. Installer den fra Play Store, sett opp kontoen din der, og prøv igjen.</string>
     <string name="sign_in_error_picker_failed">Kunne ikke åpne kontovelgeren. Sørg for at Nextcloud-appen er installert og satt opp på denne enheten.</string>
     <string name="sign_in_error_generic">Kunne ikke starte Nextcloud-innlogging: %1$s</string>
     <string name="install_nextcloud_button">Installer Nextcloud</string>

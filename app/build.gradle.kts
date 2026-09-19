@@ -26,8 +26,8 @@ android {
         applicationId = "se.cloudsite.nextsign"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "0.4.0"
+        versionCode = 5
+        versionName = "1.0.0"
     }
 
     signingConfigs {
@@ -56,6 +56,14 @@ android {
                 signingConfig = signingConfigs.getByName("release")
             }
         }
+    }
+
+    lint {
+        // NullSafeMutableLiveData's detector crashes lint's Kotlin analysis with
+        // IncompatibleClassChangeError on this Kotlin version (AGP 8.7.3's bundled
+        // lint predates Kotlin 2.2's Analysis API shape) - this app doesn't use
+        // LiveData at all, so disabling it costs nothing.
+        disable += "NullSafeMutableLiveData"
     }
 
     compileOptions {
