@@ -119,4 +119,5 @@
     <string name="notification_channel_name">Notifikationer</string>
     <string name="notification_channel_badge_name">Ventende dokumenter</string>
     <string name="poll_new_document_notification">\"%1$s\" er klar til underskrift</string>
+    <string name="notification_action_snooze">Udsæt</string>
 </resources>

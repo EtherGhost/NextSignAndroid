@@ -119,4 +119,5 @@
     <string name="notification_channel_name">Meldingen</string>
     <string name="notification_channel_badge_name">Openstaande documenten</string>
     <string name="poll_new_document_notification">\"%1$s\" is klaar om te ondertekenen</string>
+    <string name="notification_action_snooze">Sluimeren</string>
 </resources>

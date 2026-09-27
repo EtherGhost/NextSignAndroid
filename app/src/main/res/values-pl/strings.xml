@@ -119,4 +119,5 @@
     <string name="notification_channel_name">Powiadomienia</string>
     <string name="notification_channel_badge_name">Oczekujące dokumenty</string>
     <string name="poll_new_document_notification">\"%1$s\" jest gotowy do podpisania</string>
+    <string name="notification_action_snooze">Drzemka</string>
 </resources>

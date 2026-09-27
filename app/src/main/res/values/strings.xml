@@ -147,4 +147,5 @@
          backing) exists, and to let them mute it independently of real alerts. -->
     <string name="notification_channel_badge_name">Pending documents</string>
     <string name="poll_new_document_notification">\"%1$s\" is ready to sign</string>
+    <string name="notification_action_snooze">Snooze</string>
 </resources>

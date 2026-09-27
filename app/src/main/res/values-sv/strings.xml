@@ -119,4 +119,5 @@
     <string name="notification_channel_name">Aviseringar</string>
     <string name="notification_channel_badge_name">Väntande dokument</string>
     <string name="poll_new_document_notification">\"%1$s\" är redo att signeras</string>
+    <string name="notification_action_snooze">Snooza</string>
 </resources>

@@ -119,4 +119,5 @@
     <string name="notification_channel_name">Benachrichtigungen</string>
     <string name="notification_channel_badge_name">Ausstehende Dokumente</string>
     <string name="poll_new_document_notification">\"%1$s\" ist bereit zur Signatur</string>
+    <string name="notification_action_snooze">Schlummern</string>
 </resources>

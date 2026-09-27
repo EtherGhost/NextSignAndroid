@@ -16,6 +16,7 @@ import se.cloudsite.nextsign.R
 import se.cloudsite.nextsign.model.LibreSignDocument
 import se.cloudsite.nextsign.util.NotificationMode
 import se.cloudsite.nextsign.util.PushPreference
+import se.cloudsite.nextsign.util.SnoozeStore
 
 private const val CHANNEL_ID = "nextsign_pending_badge"
 private const val NOTIFICATION_TAG = "badge"
@@ -45,18 +46,28 @@ object PendingSignatureBadges {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val previouslyBadged = prefs.getStringSet(KEY_BADGED_UUIDS, emptySet()).orEmpty()
         val pending = documents.filter { it.canSignNow }
-        val pendingUuids = pending.map { it.uuid }.toSet()
+        val activelyShown = pending.filterNot { SnoozeStore.isSnoozed(context, it.uuid) }
+        val activelyShownUuids = activelyShown.map { it.uuid }.toSet()
 
-        (previouslyBadged - pendingUuids).forEach { uuid ->
+        // Covers both documents that stopped being pending and documents that just got
+        // snoozed - either way no notification should remain for them.
+        (previouslyBadged - activelyShownUuids).forEach { uuid ->
             NotificationManagerCompat.from(context).cancel(NOTIFICATION_TAG, uuid.hashCode())
         }
 
         if (hasPostNotificationsPermission(context)) {
             ensureChannel(context)
-            pending.forEach { document -> show(context, document) }
+            activelyShown.forEach { document -> show(context, document) }
         }
 
-        prefs.edit().putStringSet(KEY_BADGED_UUIDS, pendingUuids).apply()
+        prefs.edit().putStringSet(KEY_BADGED_UUIDS, activelyShownUuids).apply()
+    }
+
+    fun cancelBadge(context: Context, uuid: String) {
+        NotificationManagerCompat.from(context).cancel(NOTIFICATION_TAG, uuid.hashCode())
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val previouslyBadged = prefs.getStringSet(KEY_BADGED_UUIDS, emptySet()).orEmpty()
+        prefs.edit().putStringSet(KEY_BADGED_UUIDS, previouslyBadged - uuid).apply()
     }
 
     private fun clearAll(context: Context) {
@@ -79,6 +90,15 @@ object PendingSignatureBadges {
             openAppIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        val snoozeIntent = Intent(context, SnoozeActionReceiver::class.java).apply {
+            putExtra(EXTRA_DOCUMENT_UUID, document.uuid)
+        }
+        val snoozePendingIntent = PendingIntent.getBroadcast(
+            context,
+            document.uuid.hashCode(),
+            snoozeIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(context.getString(R.string.poll_new_document_notification, name))
@@ -87,6 +107,11 @@ object PendingSignatureBadges {
             .setOnlyAlertOnce(true)
             .setAutoCancel(false)
             .setContentIntent(contentIntent)
+            // Both a swipe (deleteIntent) and the explicit action button lead to the same
+            // 24h snooze, since a plain swipe is the universal Android expectation for
+            // "stop showing me this," not just the button.
+            .setDeleteIntent(snoozePendingIntent)
+            .addAction(0, context.getString(R.string.notification_action_snooze), snoozePendingIntent)
             .build()
         NotificationManagerCompat.from(context).notify(NOTIFICATION_TAG, document.uuid.hashCode(), notification)
     }

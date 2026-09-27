@@ -119,4 +119,5 @@
     <string name="notification_channel_name">Notificaciones</string>
     <string name="notification_channel_badge_name">Documentos pendientes</string>
     <string name="poll_new_document_notification">\"%1$s\" está listo para firmar</string>
+    <string name="notification_action_snooze">Posponer</string>
 </resources>

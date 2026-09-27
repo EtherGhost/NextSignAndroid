@@ -50,6 +50,12 @@
             </intent-filter>
         </service>
 
+        <!-- Handles the pending-signature badge notification's "Snooze" action button
+             and its delete-intent (swipe away) - both silence that document for 24h. -->
+        <receiver
+            android:name=".push.SnoozeActionReceiver"
+            android:exported="false" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
