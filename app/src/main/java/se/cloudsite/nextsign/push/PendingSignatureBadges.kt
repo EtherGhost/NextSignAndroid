@@ -21,7 +21,6 @@ import se.cloudsite.nextsign.util.SnoozeStore
 private const val CHANNEL_ID = "nextsign_pending_badge"
 private const val NOTIFICATION_TAG = "badge"
 private const val PREFS_NAME = "nextsign_settings"
-private const val KEY_BADGED_UUIDS = "badged_document_uuids"
 
 // The launcher icon badge count on essentially every modern launcher (stock/Pixel
 // included) is derived from the app's own currently-active notification count, by
@@ -36,15 +35,23 @@ private const val KEY_BADGED_UUIDS = "badged_document_uuids"
 // something new arrives, since a document leaving canSignNow (signed elsewhere,
 // deleted, no longer assigned to this signer) needs its badge notification canceled
 // even when the "new arrival" diffing logic elsewhere has nothing to react to.
+//
+// Per-account: the "currently badged" bookkeeping is stored separately per account,
+// since it's replaced wholesale on every sync() call - sharing one flat set across
+// accounts would make syncing account B's documents cancel account A's just-shown
+// badges too (both calls can happen back to back in the same poll cycle).
 object PendingSignatureBadges {
-    fun sync(context: Context, documents: List<LibreSignDocument>) {
-        if (PushPreference.getMode(context) == NotificationMode.OFF) {
-            clearAll(context)
+    private fun badgedUuidsKey(accountName: String) = "badged_document_uuids_$accountName"
+
+    fun sync(context: Context, accountName: String, documents: List<LibreSignDocument>) {
+        if (PushPreference.getMode(context, accountName) == NotificationMode.OFF) {
+            clearAll(context, accountName)
             return
         }
 
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val previouslyBadged = prefs.getStringSet(KEY_BADGED_UUIDS, emptySet()).orEmpty()
+        val key = badgedUuidsKey(accountName)
+        val previouslyBadged = prefs.getStringSet(key, emptySet()).orEmpty()
         val pending = documents.filter { it.canSignNow }
         val activelyShown = pending.filterNot { SnoozeStore.isSnoozed(context, it.uuid) }
         val activelyShownUuids = activelyShown.map { it.uuid }.toSet()
@@ -57,29 +64,31 @@ object PendingSignatureBadges {
 
         if (hasPostNotificationsPermission(context)) {
             ensureChannel(context)
-            activelyShown.forEach { document -> show(context, document) }
+            activelyShown.forEach { document -> show(context, accountName, document) }
         }
 
-        prefs.edit().putStringSet(KEY_BADGED_UUIDS, activelyShownUuids).apply()
+        prefs.edit().putStringSet(key, activelyShownUuids).apply()
     }
 
-    fun cancelBadge(context: Context, uuid: String) {
+    fun cancelBadge(context: Context, accountName: String, uuid: String) {
         NotificationManagerCompat.from(context).cancel(NOTIFICATION_TAG, uuid.hashCode())
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val previouslyBadged = prefs.getStringSet(KEY_BADGED_UUIDS, emptySet()).orEmpty()
-        prefs.edit().putStringSet(KEY_BADGED_UUIDS, previouslyBadged - uuid).apply()
+        val key = badgedUuidsKey(accountName)
+        val previouslyBadged = prefs.getStringSet(key, emptySet()).orEmpty()
+        prefs.edit().putStringSet(key, previouslyBadged - uuid).apply()
     }
 
-    private fun clearAll(context: Context) {
+    private fun clearAll(context: Context, accountName: String) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val previouslyBadged = prefs.getStringSet(KEY_BADGED_UUIDS, emptySet()).orEmpty()
+        val key = badgedUuidsKey(accountName)
+        val previouslyBadged = prefs.getStringSet(key, emptySet()).orEmpty()
         previouslyBadged.forEach { uuid ->
             NotificationManagerCompat.from(context).cancel(NOTIFICATION_TAG, uuid.hashCode())
         }
-        prefs.edit().remove(KEY_BADGED_UUIDS).apply()
+        prefs.edit().remove(key).apply()
     }
 
-    private fun show(context: Context, document: LibreSignDocument) {
+    private fun show(context: Context, accountName: String, document: LibreSignDocument) {
         val name = document.name.ifEmpty { context.getString(R.string.document_untitled) }
         val openAppIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -92,6 +101,7 @@ object PendingSignatureBadges {
         )
         val snoozeIntent = Intent(context, SnoozeActionReceiver::class.java).apply {
             putExtra(EXTRA_DOCUMENT_UUID, document.uuid)
+            putExtra(EXTRA_ACCOUNT_NAME, accountName)
         }
         val snoozePendingIntent = PendingIntent.getBroadcast(
             context,

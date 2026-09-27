@@ -58,8 +58,10 @@ fun SettingsScreen(
     onThemeModeSelected: (ThemeMode) -> Unit,
     languageTag: String?,
     onLanguageSelected: (String?) -> Unit,
-    notificationMode: NotificationMode,
-    onNotificationModeSelected: (NotificationMode) -> Unit,
+    knownAccountNames: List<String>,
+    currentAccountName: String?,
+    notificationModesByAccount: Map<String, NotificationMode>,
+    onNotificationModeSelected: (accountName: String, NotificationMode) -> Unit,
     hasPushDistributor: Boolean,
     onInstallPushHelper: () -> Unit,
     onBack: () -> Unit
@@ -123,52 +125,86 @@ fun SettingsScreen(
 
             Text(stringResource(R.string.settings_notifications), style = MaterialTheme.typography.titleMedium)
 
-            NotificationOption(
-                label = stringResource(R.string.notification_off_label),
-                description = stringResource(R.string.notification_off_description),
-                selected = notificationMode == NotificationMode.OFF,
-                onClick = { onNotificationModeSelected(NotificationMode.OFF) }
-            )
-            NotificationOption(
-                label = stringResource(R.string.notification_background_label),
-                description = stringResource(R.string.notification_background_description),
-                selected = notificationMode == NotificationMode.BACKGROUND_ONLY,
-                onClick = { onNotificationModeSelected(NotificationMode.BACKGROUND_ONLY) }
-            )
-            NotificationOption(
-                label = stringResource(R.string.notification_instant_label),
-                description = stringResource(R.string.notification_instant_description),
-                selected = notificationMode == NotificationMode.INSTANT,
-                onClick = { onNotificationModeSelected(NotificationMode.INSTANT) }
-            )
+            // One block per known account - each has its own mode (see the push
+            // notifications plan doc), not a single app-wide setting.
+            knownAccountNames.forEachIndexed { index, accountName ->
+                if (index > 0) {
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                }
+                AccountNotificationSection(
+                    accountName = accountName,
+                    isCurrent = accountName == currentAccountName,
+                    mode = notificationModesByAccount[accountName] ?: NotificationMode.BACKGROUND_ONLY,
+                    onModeSelected = { mode -> onNotificationModeSelected(accountName, mode) },
+                    hasPushDistributor = hasPushDistributor,
+                    onInstallPushHelper = onInstallPushHelper
+                )
+            }
+        }
+    }
+}
 
-            if (notificationMode == NotificationMode.INSTANT) {
-                if (hasPushDistributor) {
-                    Text(
-                        stringResource(R.string.notification_instant_active),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 40.dp, top = 4.dp)
-                    )
-                } else {
-                    // Instant notifications need a small "push helper" app installed
-                    // (a UnifiedPush distributor) - without one, only the background
-                    // check actually runs even though Instant is selected. This
-                    // guidance is what makes that requirement discoverable, rather
-                    // than notifications just silently arriving late with no
-                    // explanation.
-                    Text(
-                        stringResource(R.string.notification_instant_guidance),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 40.dp, top = 4.dp)
-                    )
-                    OutlinedButton(
-                        onClick = onInstallPushHelper,
-                        modifier = Modifier.padding(start = 40.dp, top = 4.dp)
-                    ) {
-                        Text(stringResource(R.string.install_ntfy_button))
-                    }
+@Composable
+private fun AccountNotificationSection(
+    accountName: String,
+    isCurrent: Boolean,
+    mode: NotificationMode,
+    onModeSelected: (NotificationMode) -> Unit,
+    hasPushDistributor: Boolean,
+    onInstallPushHelper: () -> Unit
+) {
+    Column {
+        Text(
+            if (isCurrent) "$accountName · ${stringResource(R.string.account_switcher_current)}" else accountName,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+        )
+        NotificationOption(
+            label = stringResource(R.string.notification_off_label),
+            description = stringResource(R.string.notification_off_description),
+            selected = mode == NotificationMode.OFF,
+            onClick = { onModeSelected(NotificationMode.OFF) }
+        )
+        NotificationOption(
+            label = stringResource(R.string.notification_background_label),
+            description = stringResource(R.string.notification_background_description),
+            selected = mode == NotificationMode.BACKGROUND_ONLY,
+            onClick = { onModeSelected(NotificationMode.BACKGROUND_ONLY) }
+        )
+        NotificationOption(
+            label = stringResource(R.string.notification_instant_label),
+            description = stringResource(R.string.notification_instant_description),
+            selected = mode == NotificationMode.INSTANT,
+            onClick = { onModeSelected(NotificationMode.INSTANT) }
+        )
+
+        if (mode == NotificationMode.INSTANT) {
+            if (hasPushDistributor) {
+                Text(
+                    stringResource(R.string.notification_instant_active),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 40.dp, top = 4.dp)
+                )
+            } else {
+                // Instant notifications need a small "push helper" app installed
+                // (a UnifiedPush distributor) - without one, only the background
+                // check actually runs even though Instant is selected. This
+                // guidance is what makes that requirement discoverable, rather
+                // than notifications just silently arriving late with no
+                // explanation.
+                Text(
+                    stringResource(R.string.notification_instant_guidance),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 40.dp, top = 4.dp)
+                )
+                OutlinedButton(
+                    onClick = onInstallPushHelper,
+                    modifier = Modifier.padding(start = 40.dp, top = 4.dp)
+                ) {
+                    Text(stringResource(R.string.install_ntfy_button))
                 }
             }
         }

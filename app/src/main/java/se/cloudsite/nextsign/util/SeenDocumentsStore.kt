@@ -9,25 +9,29 @@ import android.content.Context
 // Updated from both MainActivity's own refresh() (foreground) and the background
 // worker (Tier 1 of the push notifications plan), so seeing something in the app
 // counts the same as having been notified about it already.
+//
+// Per-account: each account's seen-set is stored separately, since markSeen() replaces
+// the whole set on every call - sharing one flat set across accounts would mean
+// polling account B wipes out account A's just-recorded seen state.
 object SeenDocumentsStore {
     private const val PREFS_NAME = "nextsign_settings"
-    private const val KEY_SEEN_UUIDS = "seen_document_uuids"
-    private const val KEY_INITIALIZED = "seen_document_uuids_initialized"
+    private fun seenKey(accountName: String) = "seen_document_uuids_$accountName"
+    private fun initializedKey(accountName: String) = "seen_document_uuids_initialized_$accountName"
 
-    fun isInitialized(context: Context): Boolean =
+    fun isInitialized(context: Context, accountName: String): Boolean =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getBoolean(KEY_INITIALIZED, false)
+            .getBoolean(initializedKey(accountName), false)
 
-    fun getSeen(context: Context): Set<String> =
+    fun getSeen(context: Context, accountName: String): Set<String> =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getStringSet(KEY_SEEN_UUIDS, emptySet())
+            .getStringSet(seenKey(accountName), emptySet())
             .orEmpty()
 
-    fun markSeen(context: Context, uuids: Set<String>) {
+    fun markSeen(context: Context, accountName: String, uuids: Set<String>) {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()
-            .putStringSet(KEY_SEEN_UUIDS, uuids)
-            .putBoolean(KEY_INITIALIZED, true)
+            .putStringSet(seenKey(accountName), uuids)
+            .putBoolean(initializedKey(accountName), true)
             .apply()
     }
 }

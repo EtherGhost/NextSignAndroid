@@ -171,7 +171,13 @@ class MainActivity : ComponentActivity() {
     private var signatureSetupError: String by mutableStateOf("")
 
     private var themeMode: ThemeMode by mutableStateOf(ThemeMode.SYSTEM)
-    private var notificationMode: NotificationMode by mutableStateOf(NotificationMode.INSTANT)
+    // The CURRENT account's own mode - kept in sync with accountNotificationModes
+    // below, used for logic that only ever cares about "the account open right now"
+    // (e.g. whether to eagerly sync push registration on load).
+    private var notificationMode: NotificationMode by mutableStateOf(NotificationMode.BACKGROUND_ONLY)
+    // Every known account's own mode, for the Settings screen's per-account list -
+    // same lazy-refresh pattern as accountAvatars above.
+    private var accountNotificationModes: Map<String, NotificationMode> by mutableStateOf(emptyMap())
     private var languageTag: String? by mutableStateOf(null)
 
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -190,20 +196,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         themeMode = ThemePreference.get(this)
-        notificationMode = PushPreference.getMode(this)
         languageTag = LanguagePreference.get(this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }
-
-        // Tier 1 of the push notifications plan - a periodic-sync fallback that works
-        // regardless of whether real-time push (Tier 2, below) is available. Runs in
-        // both BACKGROUND_ONLY and INSTANT modes; SeenDocumentsStore is what prevents
-        // the two tiers from ever producing a duplicate notification for the same
-        // document when both are active.
-        if (notificationMode != NotificationMode.OFF) {
-            DocumentPollWorker.enqueue(this)
         }
 
         account = try {
@@ -218,6 +214,20 @@ class MainActivity : ComponentActivity() {
         // the Files app already had a committed account) - otherwise it would only
         // ever contain accounts explicitly (re-)picked after this point.
         account?.let { AccountHistory.remember(this, it.name) }
+
+        // Must run after the AccountHistory.remember() call above - a fresh
+        // upgrade's only known account needs to already be in that list to inherit
+        // the old global value.
+        PushPreference.migrateFromLegacyGlobalMode(this, AccountHistory.list(this))
+        notificationMode = account?.let { PushPreference.getMode(this, it.name) } ?: NotificationMode.BACKGROUND_ONLY
+        refreshAccountNotificationModes()
+
+        // Tier 1 of the push notifications plan - a periodic-sync fallback that works
+        // regardless of whether real-time push (Tier 2, below) is available. Runs per
+        // known account, each gated by its own notification mode - see
+        // DocumentPollWorker. Always enqueued (idempotent via KEEP): whether any
+        // account actually needs polling is decided inside doWork(), not here.
+        DocumentPollWorker.enqueue(this)
 
         setContent {
             NextSignTheme(themeMode = themeMode) {
@@ -278,6 +288,7 @@ class MainActivity : ComponentActivity() {
                                                 selected = false,
                                                 onClick = {
                                                     drawerScope.launch { drawerState.close() }
+                                                    refreshAccountNotificationModes()
                                                     currentScreen = Screen.SETTINGS
                                                 }
                                             )
@@ -407,8 +418,12 @@ class MainActivity : ComponentActivity() {
                                 },
                                 languageTag = languageTag,
                                 onLanguageSelected = { tag -> setLanguage(tag) },
-                                notificationMode = notificationMode,
-                                onNotificationModeSelected = { onNotificationModeChanged(it) },
+                                knownAccountNames = AccountHistory.list(this@MainActivity),
+                                currentAccountName = currentAccount.name,
+                                notificationModesByAccount = accountNotificationModes,
+                                onNotificationModeSelected = { accountName, mode ->
+                                    onAccountNotificationModeChanged(accountName, mode)
+                                },
                                 // Live device state, not app state - re-checked each time
                                 // Settings is shown rather than cached, so installing ntfy
                                 // and coming back immediately reflects it with no extra
@@ -467,7 +482,6 @@ class MainActivity : ComponentActivity() {
     // even for an account that's already been granted. Matches the real Nextcloud
     // Notes app's own account-switching pattern (ManageAccountsViewModel.java).
     private fun switchToKnownAccount(accountName: String) {
-        val previousAccount = account
         SingleAccountHelper.commitCurrentAccount(this, accountName)
         val newAccount = try {
             SingleAccountHelper.getCurrentSingleSignOnAccount(this)
@@ -480,9 +494,11 @@ class MainActivity : ComponentActivity() {
             errorMessage = getString(R.string.account_switch_failed)
             return
         }
-        if (notificationMode == NotificationMode.INSTANT && previousAccount != null && previousAccount.name != newAccount.name) {
-            unregisterWebPushOnly(previousAccount)
-        }
+        // Each account has its own UnifiedPush instance now, so leaving an account
+        // open doesn't unregister anything - it keeps receiving Instant push
+        // independently in the background. Only an explicit mode change (see
+        // onNotificationModeChanged) or removing the account entirely (see signOut())
+        // unregisters it.
         ApiProvider.invalidate(newAccount)
         documents = emptyList()
         signatureElementsByType = emptyMap()
@@ -491,6 +507,9 @@ class MainActivity : ComponentActivity() {
         selectedDocumentUuid = null
         errorMessage = ""
         account = newAccount
+        // Each account has its own notification mode - reflect the newly-current
+        // account's own stored value, not whatever the previous account had.
+        notificationMode = PushPreference.getMode(this, newAccount.name)
     }
 
     // Signs out of the CURRENT account only - other approved accounts are unaffected
@@ -516,13 +535,16 @@ class MainActivity : ComponentActivity() {
     private fun signOut() {
         val current = account ?: return
         AccountHistory.forget(this, current.name)
+        // The account being forgotten needs its own push torn down fully (not just a
+        // server-side unsubscribe) - unlike a plain switch, it won't be around to keep
+        // using its UnifiedPush instance afterward.
+        if (PushPreference.getMode(this, current.name) == NotificationMode.INSTANT) {
+            disableInstantPush(current)
+        }
         val nextAccountName = AccountHistory.list(this).firstOrNull()
         if (nextAccountName != null) {
             switchToKnownAccount(nextAccountName)
             return
-        }
-        if (notificationMode == NotificationMode.INSTANT) {
-            unregisterWebPushOnly(current)
         }
         SingleAccountHelper.commitCurrentAccount(this, null)
         documents = emptyList()
@@ -532,6 +554,7 @@ class MainActivity : ComponentActivity() {
         selectedDocumentUuid = null
         errorMessage = ""
         account = null
+        notificationMode = NotificationMode.BACKGROUND_ONLY
     }
 
     private fun pickAccount() {
@@ -589,7 +612,6 @@ class MainActivity : ComponentActivity() {
                     switchToKnownAccount(ssoAccount.name)
                     return@onActivityResult
                 }
-                val previousAccount = account
                 SingleAccountHelper.commitCurrentAccount(this, ssoAccount.name)
                 // ApiProvider caches NextcloudAPI/Retrofit instances keyed only by
                 // account name - if this same account was picked before (in this app
@@ -600,9 +622,8 @@ class MainActivity : ComponentActivity() {
                 // specific, just-imported SingleSignOnAccount every time.
                 ApiProvider.invalidate(ssoAccount)
                 AccountHistory.remember(this, ssoAccount.name)
-                if (notificationMode == NotificationMode.INSTANT && previousAccount != null && previousAccount.name != ssoAccount.name) {
-                    unregisterWebPushOnly(previousAccount)
-                }
+                // Each account has its own UnifiedPush instance - the previous
+                // account isn't touched by switching, see switchToKnownAccount().
                 // Clear everything account-specific before switching - otherwise the
                 // previous account's documents/avatar/signature could stay visible for
                 // a moment under the new account's header, or a stale in-flight
@@ -615,6 +636,7 @@ class MainActivity : ComponentActivity() {
                 selectedDocumentUuid = null
                 errorMessage = ""
                 account = ssoAccount
+                notificationMode = PushPreference.getMode(this, ssoAccount.name)
             }
         } catch (e: AccountImportCancelledException) {
             errorMessage = getString(R.string.account_import_canceled)
@@ -656,8 +678,8 @@ class MainActivity : ComponentActivity() {
                     // Seeing the list in the app counts the same as being notified
                     // about it - keeps DocumentPollWorker (Tier 1) from later treating
                     // something the user already saw here as a new arrival.
-                    SeenDocumentsStore.markSeen(applicationContext, result.documents.map { it.uuid }.toSet())
-                    PendingSignatureBadges.sync(applicationContext, result.documents)
+                    SeenDocumentsStore.markSeen(applicationContext, account.name, result.documents.map { it.uuid }.toSet())
+                    PendingSignatureBadges.sync(applicationContext, account.name, result.documents)
                 }
                 is LoadDocumentsResult.Failure -> {
                     errorMessage = result.message
@@ -854,8 +876,8 @@ class MainActivity : ComponentActivity() {
                         UnifiedPush.tryUseDefaultDistributor(this@MainActivity) { success ->
                             android.util.Log.i("NextSignPush", "tryUseDefaultDistributor: success=$success")
                             if (success) {
-                                UnifiedPush.register(this@MainActivity, instance = "default", vapid = vapid)
-                                android.util.Log.i("NextSignPush", "UnifiedPush.register() call returned")
+                                UnifiedPush.register(this@MainActivity, instance = account.name, vapid = vapid)
+                                android.util.Log.i("NextSignPush", "UnifiedPush.register() call returned for ${account.name}")
                             }
                         }
                     }
@@ -869,49 +891,58 @@ class MainActivity : ComponentActivity() {
     }
 
     // Server-side only - tells Nextcloud to stop sending this account's notifications
-    // to this device's UnifiedPush endpoint, without tearing down the endpoint itself
-    // (see switchToKnownAccount()/onActivityResult(), which reuse the same endpoint
-    // for whichever account becomes active next). Fire-and-forget: nothing in the UI
-    // depends on this completing, and if it fails, the worst case is a stale
-    // subscription that a later full toggle-off will still catch.
+    // to its own UnifiedPush endpoint, without tearing down the endpoint/instance
+    // itself (see disableInstantPush(), which does that part).
     private fun unregisterWebPushOnly(account: SingleSignOnAccount) {
         lifecycleScope.launch {
             try {
                 val api = withContext(Dispatchers.IO) { ApiProvider.getNotificationsApi(applicationContext, account) }
                 val response = withContext(Dispatchers.IO) { api.unregisterWebPush().execute() }
-                android.util.Log.i("NextSignPush", "unregisterWebPush (switch) for ${account.name}: HTTP ${response.code()}")
+                android.util.Log.i("NextSignPush", "unregisterWebPush for ${account.name}: HTTP ${response.code()}")
             } catch (e: Exception) {
-                android.util.Log.e("NextSignPush", "unregisterWebPush (switch) failed", e)
+                android.util.Log.e("NextSignPush", "unregisterWebPush failed", e)
             }
         }
     }
 
-    // Full teardown of Tier 2 - unlike unregisterWebPushOnly(), this also tells the
-    // UnifiedPush distributor itself we no longer want the endpoint, since (unlike a
-    // mere account switch) the user has explicitly chosen a mode without instant push.
-    private fun disableInstantPush(account: SingleSignOnAccount?) {
-        if (account != null) {
-            unregisterWebPushOnly(account)
-        }
-        UnifiedPush.unregister(this, instance = "default")
+    // Full teardown of this account's Tier 2 registration - unlike
+    // unregisterWebPushOnly(), this also tells the UnifiedPush distributor we no
+    // longer want this account's own instance/endpoint. Used when the user explicitly
+    // turns this account's mode away from Instant, or forgets the account entirely
+    // (see onNotificationModeChanged()/signOut()) - a mere account switch does
+    // neither, since each account's instance keeps working independently in the
+    // background regardless of which account is currently open.
+    private fun disableInstantPush(account: SingleSignOnAccount) {
+        unregisterWebPushOnly(account)
+        UnifiedPush.unregister(this, instance = account.name)
     }
 
-    private fun onNotificationModeChanged(mode: NotificationMode) {
-        notificationMode = mode
-        PushPreference.setMode(this, mode)
+    private fun refreshAccountNotificationModes() {
+        accountNotificationModes = AccountHistory.list(this).associateWith { name -> PushPreference.getMode(this, name) }
+    }
+
+    // Settings screen callback - changes one specific account's mode, whether or not
+    // it's the one currently open. DocumentPollWorker's periodic work itself is never
+    // stopped here (see enqueue() in onCreate): it loops every known account and
+    // already skips ones set to Off, so cancelling it on Off would also stop polling
+    // for any other account that still wants it.
+    private fun onAccountNotificationModeChanged(accountName: String, mode: NotificationMode) {
+        PushPreference.setMode(this, accountName, mode)
+        accountNotificationModes = accountNotificationModes + (accountName to mode)
+        if (accountName == account?.name) {
+            notificationMode = mode
+        }
+        // AccountImporter.getSingleSignOnAccount() (not
+        // SingleAccountHelper.getCurrentSingleSignOnAccount()) - this may not be the
+        // currently-open account at all.
+        val targetAccount = try {
+            AccountImporter.getSingleSignOnAccount(this, accountName)
+        } catch (e: NextcloudFilesAppAccountNotFoundException) {
+            null
+        } ?: return
         when (mode) {
-            NotificationMode.OFF -> {
-                DocumentPollWorker.cancel(this)
-                disableInstantPush(account)
-            }
-            NotificationMode.BACKGROUND_ONLY -> {
-                DocumentPollWorker.enqueue(this)
-                disableInstantPush(account)
-            }
-            NotificationMode.INSTANT -> {
-                DocumentPollWorker.enqueue(this)
-                account?.let { syncPushRegistration(it) }
-            }
+            NotificationMode.OFF, NotificationMode.BACKGROUND_ONLY -> disableInstantPush(targetAccount)
+            NotificationMode.INSTANT -> syncPushRegistration(targetAccount)
         }
     }
 

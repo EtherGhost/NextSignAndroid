@@ -1,9 +1,8 @@
 package se.cloudsite.nextsign.push
 
 import android.util.Log
+import com.nextcloud.android.sso.AccountImporter
 import com.nextcloud.android.sso.exceptions.NextcloudFilesAppAccountNotFoundException
-import com.nextcloud.android.sso.exceptions.NoCurrentAccountSelectedException
-import com.nextcloud.android.sso.helper.SingleAccountHelper
 import com.nextcloud.android.sso.model.SingleSignOnAccount
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +25,13 @@ private const val NOTIFICATION_ID = 9001
 // to the distributor's own public endpoint, and this library decrypts them on-device
 // before onMessage() is called. Confirmed against Nextcloud's own WebPushController.php
 // source and Nextcloud Talk's real Android client, not guessed.
+//
+// Per-account: each known account registers under its own UnifiedPush `instance`
+// string (its account name) instead of one shared `"default"` - see
+// MainActivity.syncPushRegistration()/disableInstantPush(). That instance string is
+// handed back into every callback here, so it doubles as the account identifier with
+// no separate persisted endpoint-to-account mapping needed - `instance` *is* the
+// account name.
 class PushServiceImpl : PushService() {
 
     override fun onNewEndpoint(endpoint: PushEndpoint, instance: String) {
@@ -34,10 +40,10 @@ class PushServiceImpl : PushService() {
             Log.w(TAG, "onNewEndpoint: no web push key set on the endpoint, cannot register")
             return
         }
-        withAccount { account ->
+        withAccount(instance) { account ->
             val api = ApiProvider.getNotificationsApi(applicationContext, account)
             val response = api.registerWebPush(endpoint.url, pubKeySet.pubKey, pubKeySet.auth, "all").execute()
-            Log.i(TAG, "registerWebPush: HTTP ${response.code()}")
+            Log.i(TAG, "registerWebPush: HTTP ${response.code()} for ${account.name}")
         }
     }
 
@@ -50,19 +56,20 @@ class PushServiceImpl : PushService() {
         }
         val activationToken = json?.optString("activationToken", "")?.ifEmpty { null }
         if (activationToken != null) {
-            withAccount { account ->
+            withAccount(instance) { account ->
                 val api = ApiProvider.getNotificationsApi(applicationContext, account)
                 val response = api.activateWebPush(activationToken).execute()
-                Log.i(TAG, "activateWebPush: HTTP ${response.code()}")
+                Log.i(TAG, "activateWebPush: HTTP ${response.code()} for ${account.name}")
             }
             return
         }
-        Log.i(TAG, "onMessage: $content")
-        if (PushPreference.getMode(applicationContext) != NotificationMode.INSTANT) {
-            // Can still receive a stray message right after the user switches away
-            // from Instant, before unregisterWebPush() has taken effect server-side -
-            // drop it rather than show a notification for a mode the user just left.
-            Log.i(TAG, "Not in Instant notification mode - dropping")
+        Log.i(TAG, "onMessage ($instance): $content")
+        if (PushPreference.getMode(applicationContext, instance) != NotificationMode.INSTANT) {
+            // Can still receive a stray message right after this account's mode
+            // changed away from Instant, before unregisterWebPush() has taken effect
+            // server-side - drop it rather than show a notification for a mode this
+            // account just left.
+            Log.i(TAG, "$instance is not in Instant notification mode - dropping")
             return
         }
         // Nextcloud's push payload is deliberately minimal (Push.php's encodeNotif(),
@@ -77,23 +84,21 @@ class PushServiceImpl : PushService() {
     }
 
     override fun onRegistrationFailed(reason: FailedReason, instance: String) {
-        Log.w(TAG, "UnifiedPush registration failed: $reason")
+        Log.w(TAG, "UnifiedPush registration failed for $instance: $reason")
     }
 
     override fun onUnregistered(instance: String) {
-        Log.i(TAG, "UnifiedPush unregistered")
+        Log.i(TAG, "UnifiedPush unregistered for $instance")
     }
 
-    private fun withAccount(block: (SingleSignOnAccount) -> Unit) {
+    private fun withAccount(accountName: String, block: (SingleSignOnAccount) -> Unit) {
         val account = try {
-            SingleAccountHelper.getCurrentSingleSignOnAccount(applicationContext)
+            AccountImporter.getSingleSignOnAccount(applicationContext, accountName)
         } catch (e: NextcloudFilesAppAccountNotFoundException) {
-            null
-        } catch (e: NoCurrentAccountSelectedException) {
             null
         }
         if (account == null) {
-            Log.w(TAG, "No signed-in account - dropping")
+            Log.w(TAG, "Account $accountName no longer available - dropping")
             return
         }
         CoroutineScope(Dispatchers.IO).launch {
