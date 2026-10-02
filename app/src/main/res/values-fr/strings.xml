@@ -87,6 +87,11 @@
     <string name="notification_instant_active">Vous serez averti dès qu\'un document nécessitera votre signature, avec la vérification en arrière-plan en secours.</string>
     <string name="notification_instant_guidance">Installez une petite application gratuite nommée \"ntfy\" pour une livraison instantanée - elle ne nécessite ni compte ni configuration, installez-la simplement et revenez ici. En attendant, la vérification en arrière-plan continue de vous couvrir.</string>
     <string name="install_ntfy_button">Installer ntfy</string>
+    <string name="settings_snooze_duration">Durée de répétition</string>
+    <string name="snooze_duration_one_hour">1 heure</string>
+    <string name="snooze_duration_four_hours">4 heures</string>
+    <string name="snooze_duration_one_day">24 heures</string>
+    <string name="snooze_duration_three_days">3 jours</string>
 
     <string name="about_title">À propos</string>
     <string name="about_version">Version %1$s</string>
@@ -120,4 +125,5 @@
     <string name="notification_channel_badge_name">Documents en attente</string>
     <string name="poll_new_document_notification">\"%1$s\" est prêt à être signé</string>
     <string name="notification_action_snooze">Répéter</string>
+    <string name="notification_action_snooze_forever">Pour toujours</string>
 </resources>

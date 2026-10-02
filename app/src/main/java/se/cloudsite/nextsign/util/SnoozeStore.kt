@@ -4,19 +4,23 @@ import android.content.Context
 import android.content.SharedPreferences
 
 // Lets the user silence a still-pending document's badge notification for a while,
-// via either the notification's own delete-intent (swipe away) or its explicit
-// "Snooze" action button - both lead here. Time-based rather than
-// permanent-until-signed, so a forgotten document still resurfaces eventually
-// instead of going silent forever.
+// via the notification's own delete-intent (swipe away), its "Snooze" action button
+// (both use the account's configured SnoozeDuration), or its "Forever" action button
+// (FOREVER_MS - silenced until the document's own state changes, e.g. it gets signed,
+// rather than resurfacing on a timer).
 object SnoozeStore {
     private const val PREFS_NAME = "nextsign_settings"
     private const val KEY_SNOOZED = "snoozed_documents"
-    private const val SNOOZE_DURATION_MS = 24 * 60 * 60 * 1000L
+    const val FOREVER_MS = Long.MAX_VALUE
 
-    fun snooze(context: Context, uuid: String) {
+    fun snooze(context: Context, uuid: String, durationMillis: Long) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val entries = readEntries(prefs).toMutableMap()
-        entries[uuid] = System.currentTimeMillis() + SNOOZE_DURATION_MS
+        entries[uuid] = if (durationMillis == FOREVER_MS) {
+            FOREVER_MS
+        } else {
+            System.currentTimeMillis() + durationMillis
+        }
         writeEntries(prefs, entries)
     }
 

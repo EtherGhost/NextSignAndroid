@@ -28,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import se.cloudsite.nextsign.R
 import se.cloudsite.nextsign.util.NotificationMode
+import se.cloudsite.nextsign.util.SnoozeDuration
 import se.cloudsite.nextsign.util.ThemeMode
 
 // Native autonyms (each language's own name for itself), not string resources - a
@@ -62,6 +63,8 @@ fun SettingsScreen(
     currentAccountName: String?,
     notificationModesByAccount: Map<String, NotificationMode>,
     onNotificationModeSelected: (accountName: String, NotificationMode) -> Unit,
+    snoozeDurationsByAccount: Map<String, SnoozeDuration>,
+    onSnoozeDurationSelected: (accountName: String, SnoozeDuration) -> Unit,
     hasPushDistributor: Boolean,
     onInstallPushHelper: () -> Unit,
     onBack: () -> Unit
@@ -136,6 +139,8 @@ fun SettingsScreen(
                     isCurrent = accountName == currentAccountName,
                     mode = notificationModesByAccount[accountName] ?: NotificationMode.BACKGROUND_ONLY,
                     onModeSelected = { mode -> onNotificationModeSelected(accountName, mode) },
+                    snoozeDuration = snoozeDurationsByAccount[accountName] ?: SnoozeDuration.ONE_DAY,
+                    onSnoozeDurationSelected = { duration -> onSnoozeDurationSelected(accountName, duration) },
                     hasPushDistributor = hasPushDistributor,
                     onInstallPushHelper = onInstallPushHelper
                 )
@@ -150,6 +155,8 @@ private fun AccountNotificationSection(
     isCurrent: Boolean,
     mode: NotificationMode,
     onModeSelected: (NotificationMode) -> Unit,
+    snoozeDuration: SnoozeDuration,
+    onSnoozeDurationSelected: (SnoozeDuration) -> Unit,
     hasPushDistributor: Boolean,
     onInstallPushHelper: () -> Unit
 ) {
@@ -178,6 +185,41 @@ private fun AccountNotificationSection(
             selected = mode == NotificationMode.INSTANT,
             onClick = { onModeSelected(NotificationMode.INSTANT) }
         )
+
+        // How long the badge notification's "Snooze" action/swipe silences a document
+        // for - irrelevant when this account's notifications are Off entirely (no
+        // badge is ever shown to snooze), so hidden in that case, same as the Instant
+        // guidance block below is only shown for Instant.
+        if (mode != NotificationMode.OFF) {
+            Text(
+                stringResource(R.string.settings_snooze_duration),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 40.dp, top = 8.dp, bottom = 2.dp)
+            )
+            Column(modifier = Modifier.padding(start = 40.dp)) {
+                SettingsRadioOption(
+                    label = stringResource(R.string.snooze_duration_one_hour),
+                    selected = snoozeDuration == SnoozeDuration.ONE_HOUR,
+                    onClick = { onSnoozeDurationSelected(SnoozeDuration.ONE_HOUR) }
+                )
+                SettingsRadioOption(
+                    label = stringResource(R.string.snooze_duration_four_hours),
+                    selected = snoozeDuration == SnoozeDuration.FOUR_HOURS,
+                    onClick = { onSnoozeDurationSelected(SnoozeDuration.FOUR_HOURS) }
+                )
+                SettingsRadioOption(
+                    label = stringResource(R.string.snooze_duration_one_day),
+                    selected = snoozeDuration == SnoozeDuration.ONE_DAY,
+                    onClick = { onSnoozeDurationSelected(SnoozeDuration.ONE_DAY) }
+                )
+                SettingsRadioOption(
+                    label = stringResource(R.string.snooze_duration_three_days),
+                    selected = snoozeDuration == SnoozeDuration.THREE_DAYS,
+                    onClick = { onSnoozeDurationSelected(SnoozeDuration.THREE_DAYS) }
+                )
+            }
+        }
 
         if (mode == NotificationMode.INSTANT) {
             if (hasPushDistributor) {

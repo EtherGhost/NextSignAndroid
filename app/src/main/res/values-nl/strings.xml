@@ -87,6 +87,11 @@
     <string name="notification_instant_active">Je krijgt een melding zodra een document je handtekening nodig heeft, met de achtergrondcontrole als back-up.</string>
     <string name="notification_instant_guidance">Installeer een kleine gratis hulp-app genaamd \"ntfy\" voor directe bezorging - deze heeft geen account of configuratie nodig, installeer hem gewoon en kom hierheen terug. Tot die tijd dekt de achtergrondcontrole je nog steeds.</string>
     <string name="install_ntfy_button">ntfy installeren</string>
+    <string name="settings_snooze_duration">Sluimerduur</string>
+    <string name="snooze_duration_one_hour">1 uur</string>
+    <string name="snooze_duration_four_hours">4 uur</string>
+    <string name="snooze_duration_one_day">24 uur</string>
+    <string name="snooze_duration_three_days">3 dagen</string>
 
     <string name="about_title">Over</string>
     <string name="about_version">Versie %1$s</string>
@@ -120,4 +125,5 @@
     <string name="notification_channel_badge_name">Openstaande documenten</string>
     <string name="poll_new_document_notification">\"%1$s\" is klaar om te ondertekenen</string>
     <string name="notification_action_snooze">Sluimeren</string>
+    <string name="notification_action_snooze_forever">Voor altijd</string>
 </resources>

@@ -87,6 +87,11 @@
     <string name="notification_instant_active">Se te notificará en cuanto un documento necesite tu firma, con la comprobación en segundo plano como respaldo.</string>
     <string name="notification_instant_guidance">Instala una pequeña aplicación gratuita llamada \"ntfy\" para la entrega instantánea - no necesita cuenta ni configuración, solo instálala y vuelve aquí. Hasta entonces, la comprobación en segundo plano te sigue cubriendo.</string>
     <string name="install_ntfy_button">Instalar ntfy</string>
+    <string name="settings_snooze_duration">Duración de posponer</string>
+    <string name="snooze_duration_one_hour">1 hora</string>
+    <string name="snooze_duration_four_hours">4 horas</string>
+    <string name="snooze_duration_one_day">24 horas</string>
+    <string name="snooze_duration_three_days">3 días</string>
 
     <string name="about_title">Acerca de</string>
     <string name="about_version">Versión %1$s</string>
@@ -120,4 +125,5 @@
     <string name="notification_channel_badge_name">Documentos pendientes</string>
     <string name="poll_new_document_notification">\"%1$s\" está listo para firmar</string>
     <string name="notification_action_snooze">Posponer</string>
+    <string name="notification_action_snooze_forever">Para siempre</string>
 </resources>

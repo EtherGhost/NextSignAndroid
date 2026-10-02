@@ -87,6 +87,11 @@
     <string name="notification_instant_active">Du blir varslet så snart et dokument trenger signaturen din, med bakgrunnssjekken som backup.</string>
     <string name="notification_instant_guidance">Installer en liten gratis hjelpeapp kalt \"ntfy\" for umiddelbar levering - den krever verken konto eller oppsett, bare installer den og kom tilbake hit. Frem til da dekker bakgrunnssjekken deg fortsatt.</string>
     <string name="install_ntfy_button">Installer ntfy</string>
+    <string name="settings_snooze_duration">Utsettelsestid</string>
+    <string name="snooze_duration_one_hour">1 time</string>
+    <string name="snooze_duration_four_hours">4 timer</string>
+    <string name="snooze_duration_one_day">24 timer</string>
+    <string name="snooze_duration_three_days">3 dager</string>
 
     <string name="about_title">Om</string>
     <string name="about_version">Versjon %1$s</string>
@@ -120,4 +125,5 @@
     <string name="notification_channel_badge_name">Ventende dokumenter</string>
     <string name="poll_new_document_notification">\"%1$s\" er klar til signering</string>
     <string name="notification_action_snooze">Utsett</string>
+    <string name="notification_action_snooze_forever">For alltid</string>
 </resources>

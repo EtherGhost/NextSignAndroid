@@ -109,6 +109,8 @@ import se.cloudsite.nextsign.util.NotificationMode
 import se.cloudsite.nextsign.util.PushPreference
 import se.cloudsite.nextsign.util.SeenDocumentsStore
 import se.cloudsite.nextsign.util.SignatureImageEncoder
+import se.cloudsite.nextsign.util.SnoozeDuration
+import se.cloudsite.nextsign.util.SnoozeDurationPreference
 import se.cloudsite.nextsign.util.ThemeMode
 import se.cloudsite.nextsign.util.ThemePreference
 
@@ -178,6 +180,8 @@ class MainActivity : ComponentActivity() {
     // Every known account's own mode, for the Settings screen's per-account list -
     // same lazy-refresh pattern as accountAvatars above.
     private var accountNotificationModes: Map<String, NotificationMode> by mutableStateOf(emptyMap())
+    // Every known account's own badge-snooze duration, same pattern.
+    private var accountSnoozeDurations: Map<String, SnoozeDuration> by mutableStateOf(emptyMap())
     private var languageTag: String? by mutableStateOf(null)
 
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -221,6 +225,7 @@ class MainActivity : ComponentActivity() {
         PushPreference.migrateFromLegacyGlobalMode(this, AccountHistory.list(this))
         notificationMode = account?.let { PushPreference.getMode(this, it.name) } ?: NotificationMode.BACKGROUND_ONLY
         refreshAccountNotificationModes()
+        refreshAccountSnoozeDurations()
 
         // Tier 1 of the push notifications plan - a periodic-sync fallback that works
         // regardless of whether real-time push (Tier 2, below) is available. Runs per
@@ -289,6 +294,7 @@ class MainActivity : ComponentActivity() {
                                                 onClick = {
                                                     drawerScope.launch { drawerState.close() }
                                                     refreshAccountNotificationModes()
+                                                    refreshAccountSnoozeDurations()
                                                     currentScreen = Screen.SETTINGS
                                                 }
                                             )
@@ -423,6 +429,11 @@ class MainActivity : ComponentActivity() {
                                 notificationModesByAccount = accountNotificationModes,
                                 onNotificationModeSelected = { accountName, mode ->
                                     onAccountNotificationModeChanged(accountName, mode)
+                                },
+                                snoozeDurationsByAccount = accountSnoozeDurations,
+                                onSnoozeDurationSelected = { accountName, duration ->
+                                    SnoozeDurationPreference.set(this@MainActivity, accountName, duration)
+                                    accountSnoozeDurations = accountSnoozeDurations + (accountName to duration)
                                 },
                                 // Live device state, not app state - re-checked each time
                                 // Settings is shown rather than cached, so installing ntfy
@@ -919,6 +930,10 @@ class MainActivity : ComponentActivity() {
 
     private fun refreshAccountNotificationModes() {
         accountNotificationModes = AccountHistory.list(this).associateWith { name -> PushPreference.getMode(this, name) }
+    }
+
+    private fun refreshAccountSnoozeDurations() {
+        accountSnoozeDurations = AccountHistory.list(this).associateWith { name -> SnoozeDurationPreference.get(this, name) }
     }
 
     // Settings screen callback - changes one specific account's mode, whether or not

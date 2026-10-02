@@ -87,6 +87,11 @@
     <string name="notification_instant_active">Du wirst benachrichtigt, sobald ein Dokument deine Signatur benötigt, mit der Hintergrundprüfung als Absicherung.</string>
     <string name="notification_instant_guidance">Installiere die kleine kostenlose Hilfs-App \"ntfy\" für sofortige Zustellung - sie benötigt kein Konto und keine Einrichtung, installiere sie einfach und komm hierher zurück. Bis dahin schützt dich weiterhin die Hintergrundprüfung.</string>
     <string name="install_ntfy_button">ntfy installieren</string>
+    <string name="settings_snooze_duration">Schlummerdauer</string>
+    <string name="snooze_duration_one_hour">1 Stunde</string>
+    <string name="snooze_duration_four_hours">4 Stunden</string>
+    <string name="snooze_duration_one_day">24 Stunden</string>
+    <string name="snooze_duration_three_days">3 Tage</string>
 
     <string name="about_title">Über</string>
     <string name="about_version">Version %1$s</string>
@@ -120,4 +125,5 @@
     <string name="notification_channel_badge_name">Ausstehende Dokumente</string>
     <string name="poll_new_document_notification">\"%1$s\" ist bereit zur Signatur</string>
     <string name="notification_action_snooze">Schlummern</string>
+    <string name="notification_action_snooze_forever">Für immer</string>
 </resources>

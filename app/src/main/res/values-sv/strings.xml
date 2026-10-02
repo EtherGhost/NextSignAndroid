@@ -87,6 +87,11 @@
     <string name="notification_instant_active">Du får en avisering så snart ett dokument behöver din signatur, med bakgrundskontrollen som säkerhet.</string>
     <string name="notification_instant_guidance">Installera en liten gratis hjälpapp som heter \"ntfy\" för direktleverans - den behöver inget konto eller någon konfiguration, installera den bara och kom tillbaka hit. Fram tills dess täcker bakgrundskontrollen fortfarande upp dig.</string>
     <string name="install_ntfy_button">Installera ntfy</string>
+    <string name="settings_snooze_duration">Snooza-tid</string>
+    <string name="snooze_duration_one_hour">1 timme</string>
+    <string name="snooze_duration_four_hours">4 timmar</string>
+    <string name="snooze_duration_one_day">24 timmar</string>
+    <string name="snooze_duration_three_days">3 dagar</string>
 
     <string name="about_title">Om</string>
     <string name="about_version">Version %1$s</string>
@@ -120,4 +125,5 @@
     <string name="notification_channel_badge_name">Väntande dokument</string>
     <string name="poll_new_document_notification">\"%1$s\" är redo att signeras</string>
     <string name="notification_action_snooze">Snooza</string>
+    <string name="notification_action_snooze_forever">För alltid</string>
 </resources>

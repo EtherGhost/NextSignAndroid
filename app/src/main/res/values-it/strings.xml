@@ -87,6 +87,11 @@
     <string name="notification_instant_active">Verrai avvisato non appena un documento richiederà la tua firma, con il controllo in background come riserva.</string>
     <string name="notification_instant_guidance">Installa una piccola app gratuita chiamata \"ntfy\" per la consegna istantanea - non richiede account né configurazione, installala e torna qui. Fino ad allora, il controllo in background continua a coprirti.</string>
     <string name="install_ntfy_button">Installa ntfy</string>
+    <string name="settings_snooze_duration">Durata del rinvio</string>
+    <string name="snooze_duration_one_hour">1 ora</string>
+    <string name="snooze_duration_four_hours">4 ore</string>
+    <string name="snooze_duration_one_day">24 ore</string>
+    <string name="snooze_duration_three_days">3 giorni</string>
 
     <string name="about_title">Informazioni</string>
     <string name="about_version">Versione %1$s</string>
@@ -120,4 +125,5 @@
     <string name="notification_channel_badge_name">Documenti in sospeso</string>
     <string name="poll_new_document_notification">\"%1$s\" è pronto per la firma</string>
     <string name="notification_action_snooze">Ripeti</string>
+    <string name="notification_action_snooze_forever">Per sempre</string>
 </resources>

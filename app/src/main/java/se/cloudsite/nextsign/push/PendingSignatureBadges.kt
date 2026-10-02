@@ -16,6 +16,7 @@ import se.cloudsite.nextsign.R
 import se.cloudsite.nextsign.model.LibreSignDocument
 import se.cloudsite.nextsign.util.NotificationMode
 import se.cloudsite.nextsign.util.PushPreference
+import se.cloudsite.nextsign.util.SnoozeDurationPreference
 import se.cloudsite.nextsign.util.SnoozeStore
 
 private const val CHANNEL_ID = "nextsign_pending_badge"
@@ -99,14 +100,30 @@ object PendingSignatureBadges {
             openAppIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        val snoozeDurationMillis = SnoozeDurationPreference.get(context, accountName).millis
         val snoozeIntent = Intent(context, SnoozeActionReceiver::class.java).apply {
             putExtra(EXTRA_DOCUMENT_UUID, document.uuid)
             putExtra(EXTRA_ACCOUNT_NAME, accountName)
+            putExtra(EXTRA_SNOOZE_DURATION_MILLIS, snoozeDurationMillis)
         }
         val snoozePendingIntent = PendingIntent.getBroadcast(
             context,
             document.uuid.hashCode(),
             snoozeIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        // Distinct request code from snoozePendingIntent above - two different
+        // getBroadcast() PendingIntents to the same receiver class need different
+        // request codes, or the second overwrites the first instead of coexisting.
+        val snoozeForeverIntent = Intent(context, SnoozeActionReceiver::class.java).apply {
+            putExtra(EXTRA_DOCUMENT_UUID, document.uuid)
+            putExtra(EXTRA_ACCOUNT_NAME, accountName)
+            putExtra(EXTRA_SNOOZE_DURATION_MILLIS, SnoozeStore.FOREVER_MS)
+        }
+        val snoozeForeverPendingIntent = PendingIntent.getBroadcast(
+            context,
+            "forever:${document.uuid}".hashCode(),
+            snoozeForeverIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
@@ -117,11 +134,14 @@ object PendingSignatureBadges {
             .setOnlyAlertOnce(true)
             .setAutoCancel(false)
             .setContentIntent(contentIntent)
-            // Both a swipe (deleteIntent) and the explicit action button lead to the same
-            // 24h snooze, since a plain swipe is the universal Android expectation for
-            // "stop showing me this," not just the button.
+            // A swipe (deleteIntent) and the "Snooze" button both use the account's
+            // configured duration, since a plain swipe is the universal Android
+            // expectation for "stop showing me this" - "Forever" (silenced until the
+            // document's own state changes) is deliberately button-only, not something
+            // an accidental swipe should trigger.
             .setDeleteIntent(snoozePendingIntent)
             .addAction(0, context.getString(R.string.notification_action_snooze), snoozePendingIntent)
+            .addAction(0, context.getString(R.string.notification_action_snooze_forever), snoozeForeverPendingIntent)
             .build()
         NotificationManagerCompat.from(context).notify(NOTIFICATION_TAG, document.uuid.hashCode(), notification)
     }

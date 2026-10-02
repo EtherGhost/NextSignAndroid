@@ -98,6 +98,11 @@
     <string name="notification_instant_active">You\'ll be notified as soon as a document needs your signature, with the background check as a backup.</string>
     <string name="notification_instant_guidance">Install a small free helper app called \"ntfy\" for instant delivery - it needs no account or setup, just install it and come back here. Until then, the background check still covers you.</string>
     <string name="install_ntfy_button">Install ntfy</string>
+    <string name="settings_snooze_duration">Snooze duration</string>
+    <string name="snooze_duration_one_hour">1 hour</string>
+    <string name="snooze_duration_four_hours">4 hours</string>
+    <string name="snooze_duration_one_day">24 hours</string>
+    <string name="snooze_duration_three_days">3 days</string>
 
     <!-- About - title/version/description translate normally, but the License and
          Disclaimer section (headers and body both) are deliberately kept English-only
@@ -148,4 +153,5 @@
     <string name="notification_channel_badge_name">Pending documents</string>
     <string name="poll_new_document_notification">\"%1$s\" is ready to sign</string>
     <string name="notification_action_snooze">Snooze</string>
+    <string name="notification_action_snooze_forever">Forever</string>
 </resources>

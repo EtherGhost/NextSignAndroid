@@ -87,6 +87,11 @@
     <string name="notification_instant_active">Вы будете уведомлены, как только документу потребуется ваша подпись, а фоновая проверка послужит подстраховкой.</string>
     <string name="notification_instant_guidance">Установите небольшое бесплатное приложение \"ntfy\" для мгновенной доставки уведомлений - оно не требует учётной записи или настройки, просто установите его и вернитесь сюда. А пока фоновая проверка по-прежнему вас подстраховывает.</string>
     <string name="install_ntfy_button">Установить ntfy</string>
+    <string name="settings_snooze_duration">Длительность отсрочки</string>
+    <string name="snooze_duration_one_hour">1 час</string>
+    <string name="snooze_duration_four_hours">4 часа</string>
+    <string name="snooze_duration_one_day">24 часа</string>
+    <string name="snooze_duration_three_days">3 дня</string>
 
     <string name="about_title">О приложении</string>
     <string name="about_version">Версия %1$s</string>
@@ -120,4 +125,5 @@
     <string name="notification_channel_badge_name">Ожидающие документы</string>
     <string name="poll_new_document_notification">\"%1$s\" готов к подписанию</string>
     <string name="notification_action_snooze">Отложить</string>
+    <string name="notification_action_snooze_forever">Навсегда</string>
 </resources>

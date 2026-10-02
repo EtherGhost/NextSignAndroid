@@ -87,6 +87,11 @@
     <string name="notification_instant_active">Du får besked, så snart et dokument har brug for din underskrift, med baggrundstjekket som backup.</string>
     <string name="notification_instant_guidance">Installer en lille gratis hjælpeapp kaldet \"ntfy\" for øjeblikkelig levering - den kræver hverken konto eller opsætning, installer den bare og kom tilbage her. Indtil da dækker baggrundstjekket dig stadig.</string>
     <string name="install_ntfy_button">Installer ntfy</string>
+    <string name="settings_snooze_duration">Snooze-varighed</string>
+    <string name="snooze_duration_one_hour">1 time</string>
+    <string name="snooze_duration_four_hours">4 timer</string>
+    <string name="snooze_duration_one_day">24 timer</string>
+    <string name="snooze_duration_three_days">3 dage</string>
 
     <string name="about_title">Om</string>
     <string name="about_version">Version %1$s</string>
@@ -120,4 +125,5 @@
     <string name="notification_channel_badge_name">Ventende dokumenter</string>
     <string name="poll_new_document_notification">\"%1$s\" er klar til underskrift</string>
     <string name="notification_action_snooze">Udsæt</string>
+    <string name="notification_action_snooze_forever">For altid</string>
 </resources>

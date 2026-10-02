@@ -87,6 +87,11 @@
     <string name="notification_instant_active">Otrzymasz powiadomienie, gdy tylko dokument będzie wymagał Twojego podpisu, z kontrolą w tle jako zabezpieczeniem.</string>
     <string name="notification_instant_guidance">Zainstaluj małą, darmową aplikację pomocniczą o nazwie \"ntfy\" dla natychmiastowego dostarczania - nie wymaga ona konta ani konfiguracji, po prostu ją zainstaluj i wróć tutaj. Do tego czasu sprawdzanie w tle nadal Cię zabezpiecza.</string>
     <string name="install_ntfy_button">Zainstaluj ntfy</string>
+    <string name="settings_snooze_duration">Czas drzemki</string>
+    <string name="snooze_duration_one_hour">1 godzina</string>
+    <string name="snooze_duration_four_hours">4 godziny</string>
+    <string name="snooze_duration_one_day">24 godziny</string>
+    <string name="snooze_duration_three_days">3 dni</string>
 
     <string name="about_title">O aplikacji</string>
     <string name="about_version">Wersja %1$s</string>
@@ -120,4 +125,5 @@
     <string name="notification_channel_badge_name">Oczekujące dokumenty</string>
     <string name="poll_new_document_notification">\"%1$s\" jest gotowy do podpisania</string>
     <string name="notification_action_snooze">Drzemka</string>
+    <string name="notification_action_snooze_forever">Na zawsze</string>
 </resources>
