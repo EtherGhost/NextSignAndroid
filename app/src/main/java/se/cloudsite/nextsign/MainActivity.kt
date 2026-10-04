@@ -27,8 +27,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DrawerValue
@@ -206,6 +208,7 @@ class MainActivity : ComponentActivity() {
     // top-bar button). Populated lazily via loadAccountAvatars() when that screen opens.
     private var accountAvatars: Map<String, Bitmap?> by mutableStateOf(emptyMap())
     private var sortMode: SortMode by mutableStateOf(SortMode.NEEDS_SIGNATURE_FIRST)
+    private var showOnlyNeedsAttention: Boolean by mutableStateOf(false)
     // { "signature": nodeId, "initial": nodeId, ... } - the account's own registered
     // signature/initials images, needed alongside a document's placeholder position to
     // render a visible mark when signing. Empty until loadSignatureElements() returns.
@@ -363,9 +366,13 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                 ) {
+                                    val filteredDocuments = if (showOnlyNeedsAttention) documents.filter { it.canSignNow } else documents
                                     AppScreen(
                                         account = currentAccount,
-                                        documents = sortDocuments(documents, sortMode),
+                                        documents = sortDocuments(filteredDocuments, sortMode),
+                                        // Distinct from "no documents at all" - the filter hid
+                                        // everything, not an actually-empty list.
+                                        filterHidAllDocuments = showOnlyNeedsAttention && documents.isNotEmpty() && filteredDocuments.isEmpty(),
                                         loading = loading,
                                         errorMessage = errorMessage,
                                         selectedDocument = selectedDocument,
@@ -374,6 +381,8 @@ class MainActivity : ComponentActivity() {
                                         downloading = downloadingUuid == selectedDocument?.uuid,
                                         sortMode = sortMode,
                                         onSortModeSelected = { sortMode = it },
+                                        showOnlyNeedsAttention = showOnlyNeedsAttention,
+                                        onToggleNeedsAttentionFilter = { showOnlyNeedsAttention = !showOnlyNeedsAttention },
                                         avatarBitmap = avatarBitmap,
                                         onSwitchAccount = { openAccountScreen() },
                                         onMenuClick = { drawerScope.launch { drawerState.open() } },
@@ -1483,6 +1492,7 @@ private fun openPlayStoreListing(context: android.content.Context, packageName: 
 private fun AppScreen(
     account: SingleSignOnAccount,
     documents: List<LibreSignDocument>,
+    filterHidAllDocuments: Boolean,
     loading: Boolean,
     errorMessage: String,
     selectedDocument: LibreSignDocument?,
@@ -1491,6 +1501,8 @@ private fun AppScreen(
     downloading: Boolean,
     sortMode: SortMode,
     onSortModeSelected: (SortMode) -> Unit,
+    showOnlyNeedsAttention: Boolean,
+    onToggleNeedsAttentionFilter: () -> Unit,
     avatarBitmap: Bitmap?,
     onSwitchAccount: () -> Unit,
     onMenuClick: () -> Unit,
@@ -1512,6 +1524,15 @@ private fun AppScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onToggleNeedsAttentionFilter) {
+                        Icon(
+                            if (showOnlyNeedsAttention) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+                            contentDescription = stringResource(
+                                if (showOnlyNeedsAttention) R.string.filter_needs_attention_on_content_description
+                                else R.string.filter_needs_attention_off_content_description
+                            )
+                        )
+                    }
                     SortMenuButton(sortMode = sortMode, onSortModeSelected = onSortModeSelected)
                     IconButton(onClick = onRefresh) {
                         Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.refresh_content_description))
@@ -1535,6 +1556,9 @@ private fun AppScreen(
                 documents = documents,
                 loading = loading,
                 errorMessage = errorMessage,
+                emptyMessage = stringResource(
+                    if (filterHidAllDocuments) R.string.document_list_empty_filtered else R.string.document_list_empty
+                ),
                 currentAccountUserId = account.userId,
                 onRefresh = onRefresh,
                 onDocumentClick = onDocumentClick,

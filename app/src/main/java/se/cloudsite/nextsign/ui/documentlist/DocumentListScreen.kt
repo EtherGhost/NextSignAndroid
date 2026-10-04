@@ -75,6 +75,7 @@ fun DocumentListScreen(
     documents: List<LibreSignDocument>,
     loading: Boolean,
     errorMessage: String,
+    emptyMessage: String,
     currentAccountUserId: String,
     onRefresh: () -> Unit,
     onDocumentClick: (LibreSignDocument) -> Unit,
@@ -96,7 +97,7 @@ fun DocumentListScreen(
 
             if (!loading && documents.isEmpty() && errorMessage.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(stringResource(R.string.document_list_empty))
+                    Text(emptyMessage)
                 }
             }
 

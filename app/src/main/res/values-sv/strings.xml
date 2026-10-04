@@ -40,6 +40,9 @@
     <string name="delete_button">Ta bort</string>
 
     <string name="document_list_empty">Inga dokument än.</string>
+    <string name="document_list_empty_filtered">Inget behöver din uppmärksamhet just nu.</string>
+    <string name="filter_needs_attention_on_content_description">Visar bara dokument som behöver din uppmärksamhet</string>
+    <string name="filter_needs_attention_off_content_description">Visa bara dokument som behöver din uppmärksamhet</string>
     <string name="document_untitled">Namnlöst dokument</string>
     <string name="document_requested_by">Begärt av %1$s</string>
 

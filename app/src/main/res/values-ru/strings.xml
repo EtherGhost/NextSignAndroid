@@ -40,6 +40,9 @@
     <string name="delete_button">Удалить</string>
 
     <string name="document_list_empty">Пока нет документов.</string>
+    <string name="document_list_empty_filtered">Сейчас ничего не требует вашего внимания.</string>
+    <string name="filter_needs_attention_on_content_description">Показаны только документы, требующие вашего внимания</string>
+    <string name="filter_needs_attention_off_content_description">Показывать только документы, требующие внимания</string>
     <string name="document_untitled">Документ без названия</string>
     <string name="document_requested_by">Запрошено пользователем %1$s</string>
 

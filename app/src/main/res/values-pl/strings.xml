@@ -40,6 +40,9 @@
     <string name="delete_button">Usuń</string>
 
     <string name="document_list_empty">Brak dokumentów.</string>
+    <string name="document_list_empty_filtered">Nic obecnie nie wymaga Twojej uwagi.</string>
+    <string name="filter_needs_attention_on_content_description">Pokazywane są tylko dokumenty wymagające Twojej uwagi</string>
+    <string name="filter_needs_attention_off_content_description">Pokaż tylko dokumenty wymagające Twojej uwagi</string>
     <string name="document_untitled">Dokument bez nazwy</string>
     <string name="document_requested_by">Żądanie od %1$s</string>
 

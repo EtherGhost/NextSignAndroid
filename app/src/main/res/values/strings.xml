@@ -46,6 +46,9 @@
 
     <!-- Document list -->
     <string name="document_list_empty">No documents yet.</string>
+    <string name="document_list_empty_filtered">Nothing needs your attention right now.</string>
+    <string name="filter_needs_attention_on_content_description">Showing only documents needing your attention</string>
+    <string name="filter_needs_attention_off_content_description">Show only documents needing your attention</string>
     <string name="document_untitled">Untitled document</string>
     <string name="document_requested_by">Requested by %1$s</string>
 
