@@ -65,10 +65,12 @@ fun PrepareDocumentScreen(
     selectedAccountName: String?,
     previewBitmap: Bitmap?,
     previewLoading: Boolean,
+    previewError: Boolean,
     signerSearchQuery: String,
     onSignerSearchQueryChange: (String) -> Unit,
     signerSearchResults: List<SignerCandidate>,
     signerSearchLoading: Boolean,
+    signerSearchErrorMessage: String?,
     selectedSigners: List<SignerCandidate>,
     placedFields: Map<String, PdfFieldPlacement>,
     armedSignerIdentify: String?,
@@ -139,6 +141,12 @@ fun PrepareDocumentScreen(
 
                     if (previewLoading) {
                         CircularProgressIndicator(modifier = Modifier.padding(top = 16.dp))
+                    } else if (previewError) {
+                        Text(
+                            stringResource(R.string.prepare_document_preview_error),
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(top = 16.dp)
+                        )
                     } else if (previewBitmap != null) {
                         PdfPreviewWithPlacement(
                             bitmap = previewBitmap,
@@ -216,6 +224,13 @@ fun PrepareDocumentScreen(
                     )
                     if (signerSearchLoading) {
                         CircularProgressIndicator(modifier = Modifier.padding(top = 8.dp))
+                    } else if (signerSearchErrorMessage != null) {
+                        Text(
+                            signerSearchErrorMessage,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                     }
                 }
 

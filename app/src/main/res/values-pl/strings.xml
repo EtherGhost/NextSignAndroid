@@ -143,6 +143,7 @@
     <string name="cache_dir_prepare_failed">Nie udało się przygotować katalogu pamięci podręcznej.</string>
     <string name="downloaded_file_empty">Pobrany plik jest pusty.</string>
     <string name="libresign_unexpected_response">LibreSign zwrócił nieoczekiwaną odpowiedź.</string>
+    <string name="prepare_document_preview_error">Nie można wyświetlić podglądu tego pliku PDF. Może być uszkodzony, pusty lub zabezpieczony hasłem.</string>
     <string name="action_libresign_request">Żądanie LibreSign</string>
     <string name="action_search_signers">Wyszukiwanie sygnatariuszy</string>
     <string name="action_submit_document">Wysyłanie dokumentu</string>

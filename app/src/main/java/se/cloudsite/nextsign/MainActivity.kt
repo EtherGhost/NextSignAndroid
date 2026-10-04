@@ -182,10 +182,12 @@ class MainActivity : ComponentActivity() {
     // handleShareIntent). The share intent itself carries no account information.
     private var preparedDocumentAccountName: String? by mutableStateOf(null)
     private var preparedDocumentPreviewBitmap: Bitmap? by mutableStateOf(null)
+    private var preparedDocumentPreviewError: Boolean by mutableStateOf(false)
     private var preparedDocumentPreviewLoading: Boolean by mutableStateOf(false)
     private var signerSearchQuery: String by mutableStateOf("")
     private var signerSearchResults: List<SignerCandidate> by mutableStateOf(emptyList())
     private var signerSearchLoading: Boolean by mutableStateOf(false)
+    private var signerSearchErrorMessage: String? by mutableStateOf(null)
     private var selectedSigners: List<SignerCandidate> by mutableStateOf(emptyList())
     private var placedFields: Map<String, PdfFieldPlacement> by mutableStateOf(emptyMap())
     // Explicit "which signer does the next document tap/slider act on" - set by
@@ -564,23 +566,35 @@ class MainActivity : ComponentActivity() {
                                 LaunchedEffect(signerSearchQuery, chosenAccountName) {
                                     if (chosenAccountName == null || signerSearchQuery.isBlank()) {
                                         signerSearchResults = emptyList()
+                                        signerSearchErrorMessage = null
                                         signerSearchLoading = false
                                         return@LaunchedEffect
                                     }
                                     signerSearchLoading = true
+                                    signerSearchErrorMessage = null
                                     delay(400)
                                     val resolvedAccount = try {
                                         AccountImporter.getSingleSignOnAccount(this@MainActivity, chosenAccountName)
                                     } catch (e: NextcloudFilesAppAccountNotFoundException) {
                                         null
                                     }
-                                    signerSearchResults = if (resolvedAccount != null) {
+                                    if (resolvedAccount != null) {
+                                        // A real search error (network outage, server error) must
+                                        // not look identical to "no matches" - the former collapsed
+                                        // to emptyList() silently before, with no way to tell them apart.
                                         when (val result = withContext(Dispatchers.IO) { repository.searchSigners(resolvedAccount, signerSearchQuery) }) {
-                                            is SearchSignersResult.Success -> result.candidates
-                                            is SearchSignersResult.Failure -> emptyList()
+                                            is SearchSignersResult.Success -> {
+                                                signerSearchResults = result.candidates
+                                                signerSearchErrorMessage = null
+                                            }
+                                            is SearchSignersResult.Failure -> {
+                                                signerSearchResults = emptyList()
+                                                signerSearchErrorMessage = result.message
+                                            }
                                         }
                                     } else {
-                                        emptyList()
+                                        signerSearchResults = emptyList()
+                                        signerSearchErrorMessage = getString(R.string.account_switch_failed)
                                     }
                                     signerSearchLoading = false
                                 }
@@ -596,10 +610,12 @@ class MainActivity : ComponentActivity() {
                                     selectedAccountName = preparedDocumentAccountName,
                                     previewBitmap = preparedDocumentPreviewBitmap,
                                     previewLoading = preparedDocumentPreviewLoading,
+                                    previewError = preparedDocumentPreviewError,
                                     signerSearchQuery = signerSearchQuery,
                                     onSignerSearchQueryChange = { signerSearchQuery = it },
                                     signerSearchResults = signerSearchResults,
                                     signerSearchLoading = signerSearchLoading,
+                                    signerSearchErrorMessage = signerSearchErrorMessage,
                                     selectedSigners = selectedSigners,
                                     placedFields = placedFields,
                                     armedSignerIdentify = effectiveArmedIdentify,
@@ -627,6 +643,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                         signerSearchQuery = ""
                                         signerSearchResults = emptyList()
+                                        signerSearchErrorMessage = null
                                     },
                                     onRemoveSigner = { candidate ->
                                         selectedSigners = selectedSigners.filterNot { it.identify == candidate.identify }
@@ -668,8 +685,10 @@ class MainActivity : ComponentActivity() {
                                         preparedDocumentName = ""
                                         preparedDocumentAccountName = null
                                         preparedDocumentPreviewBitmap = null
+                                        preparedDocumentPreviewError = false
                                         signerSearchQuery = ""
                                         signerSearchResults = emptyList()
+                                        signerSearchErrorMessage = null
                                         selectedSigners = emptyList()
                                         placedFields = emptyMap()
                                         armedSignerIdentify = null
@@ -937,10 +956,17 @@ class MainActivity : ComponentActivity() {
         }
         currentScreen = Screen.PREPARE_DOCUMENT
         preparedDocumentPreviewBitmap = null
+        preparedDocumentPreviewError = false
         preparedDocumentPreviewLoading = true
         lifecycleScope.launch {
             val bitmap = withContext(Dispatchers.IO) { PdfPreviewRenderer.renderFirstPage(this@MainActivity, uri) }
+            // Guards against a share received while an older one's render was still
+            // in flight (e.g. back-out-then-reshare) landing after the newer one and
+            // silently swapping in the wrong page - same pattern as refresh()'s
+            // account guard elsewhere in this file.
+            if (uri != preparedDocumentUri) return@launch
             preparedDocumentPreviewBitmap = bitmap
+            preparedDocumentPreviewError = bitmap == null
             preparedDocumentPreviewLoading = false
         }
         return true
@@ -993,8 +1019,10 @@ class MainActivity : ComponentActivity() {
                     preparedDocumentName = ""
                     preparedDocumentAccountName = null
                     preparedDocumentPreviewBitmap = null
+                    preparedDocumentPreviewError = false
                     signerSearchQuery = ""
                     signerSearchResults = emptyList()
+                    signerSearchErrorMessage = null
                     selectedSigners = emptyList()
                     placedFields = emptyMap()
                     armedSignerIdentify = null

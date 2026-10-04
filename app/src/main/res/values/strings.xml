@@ -167,6 +167,7 @@
     <string name="cache_dir_prepare_failed">Cache directory could not be prepared.</string>
     <string name="downloaded_file_empty">The downloaded file is empty.</string>
     <string name="libresign_unexpected_response">LibreSign returned an unexpected response.</string>
+    <string name="prepare_document_preview_error">Could not preview this PDF. It may be corrupted, empty, or password-protected.</string>
     <string name="action_libresign_request">LibreSign request</string>
     <string name="action_search_signers">Searching for signers</string>
     <string name="action_submit_document">Sending document</string>

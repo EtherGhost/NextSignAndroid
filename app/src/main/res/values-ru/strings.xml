@@ -143,6 +143,7 @@
     <string name="cache_dir_prepare_failed">Не удалось подготовить каталог кэша.</string>
     <string name="downloaded_file_empty">Загруженный файл пуст.</string>
     <string name="libresign_unexpected_response">LibreSign вернул неожиданный ответ.</string>
+    <string name="prepare_document_preview_error">Не удалось предварительно просмотреть этот PDF. Возможно, он повреждён, пуст или защищён паролем.</string>
     <string name="action_libresign_request">Запрос к LibreSign</string>
     <string name="action_search_signers">Поиск подписантов</string>
     <string name="action_submit_document">Отправка документа</string>

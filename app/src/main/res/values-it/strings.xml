@@ -143,6 +143,7 @@
     <string name="cache_dir_prepare_failed">Impossibile preparare la cartella cache.</string>
     <string name="downloaded_file_empty">Il file scaricato è vuoto.</string>
     <string name="libresign_unexpected_response">LibreSign ha restituito una risposta inattesa.</string>
+    <string name="prepare_document_preview_error">Impossibile visualizzare l\'anteprima di questo PDF. Potrebbe essere danneggiato, vuoto o protetto da password.</string>
     <string name="action_libresign_request">Richiesta a LibreSign</string>
     <string name="action_search_signers">Ricerca firmatari</string>
     <string name="action_submit_document">Invio del documento</string>

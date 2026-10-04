@@ -143,6 +143,7 @@
     <string name="cache_dir_prepare_failed">Cachekatalogen kunde inte förberedas.</string>
     <string name="downloaded_file_empty">Den nedladdade filen är tom.</string>
     <string name="libresign_unexpected_response">LibreSign returnerade ett oväntat svar.</string>
+    <string name="prepare_document_preview_error">Kunde inte förhandsgranska den här PDF-filen. Den kan vara skadad, tom eller lösenordsskyddad.</string>
     <string name="action_libresign_request">LibreSign-begäran</string>
     <string name="action_search_signers">Söker efter signerare</string>
     <string name="action_submit_document">Skickar dokument</string>

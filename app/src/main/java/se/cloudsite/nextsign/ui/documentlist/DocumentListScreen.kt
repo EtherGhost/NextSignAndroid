@@ -112,7 +112,11 @@ fun DocumentListScreen(
                         // Only while nobody has signed yet (status 1) - once any
                         // signature exists (partially or fully signed), that's real
                         // data; cancelling instead of deleting isn't offered for those.
-                        canDelete = document.requestedByUserId.isNotEmpty() &&
+                        // fileId != -1 guards the "server didn't send one" case (see
+                        // LibreSignDocument.fileId) - without it a null id would still
+                        // show the menu and send DELETE file/file_id/-1.
+                        canDelete = document.fileId != -1 &&
+                            document.requestedByUserId.isNotEmpty() &&
                             document.requestedByUserId == currentAccountUserId &&
                             document.fileStatus == 1,
                         onClick = { onDocumentClick(document) },

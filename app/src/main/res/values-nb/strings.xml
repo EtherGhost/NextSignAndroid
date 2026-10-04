@@ -143,6 +143,7 @@
     <string name="cache_dir_prepare_failed">Hurtigbufferkatalogen kunne ikke forberedes.</string>
     <string name="downloaded_file_empty">Den nedlastede filen er tom.</string>
     <string name="libresign_unexpected_response">LibreSign returnerte et uventet svar.</string>
+    <string name="prepare_document_preview_error">Kunne ikke forhåndsvise denne PDF-en. Den kan være skadet, tom eller passordbeskyttet.</string>
     <string name="action_libresign_request">LibreSign-forespørsel</string>
     <string name="action_search_signers">Søker etter underskrivere</string>
     <string name="action_submit_document">Sender dokument</string>

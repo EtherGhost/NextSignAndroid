@@ -308,10 +308,21 @@ class LibreSignRepository(private val context: Context) {
 
             for (signer in signers) {
                 val field = fieldsByIdentify[signer.identify] ?: continue
+                // .firstOrNull()?.value, not .any { } over the whole list - matches the
+                // confirmed contract (one identifyMethod per returned signer in the live
+                // spike); scanning every entry risked attaching a field to the wrong
+                // sign request if a returned signer ever carried more than one.
                 val signRequestId = returnedSigners
-                    .firstOrNull { rs -> rs.identifyMethods.orEmpty().any { it.value == signer.identify } }
+                    .firstOrNull { rs -> rs.identifyMethods?.firstOrNull()?.value == signer.identify }
                     ?.signRequestId
-                    ?: continue
+                if (signRequestId == null) {
+                    // Rolls back the sign request this call itself just created, rather
+                    // than leaving an orphaned, field-less document behind - fileStatus
+                    // is guaranteed 1 here (nobody could have signed yet), so the same
+                    // gating deleteDocument()'s caller enforces always holds.
+                    api.deleteFile(fileId).execute()
+                    return SubmitPreparedDocumentResult.Failure(context.getString(R.string.libresign_unexpected_response))
+                }
                 val elementBody = CreateFileElementBody(
                     signRequestId = signRequestId,
                     fileId = fileId,
@@ -325,6 +336,7 @@ class LibreSignRepository(private val context: Context) {
                 )
                 val elementResponse = api.createFileElement(fileUuid, elementBody).execute()
                 if (!elementResponse.isSuccessful) {
+                    api.deleteFile(fileId).execute()
                     return SubmitPreparedDocumentResult.Failure(errorMessage(elementResponse, R.string.action_submit_document))
                 }
             }

@@ -143,6 +143,7 @@
     <string name="cache_dir_prepare_failed">De cachemap kon niet worden voorbereid.</string>
     <string name="downloaded_file_empty">Het gedownloade bestand is leeg.</string>
     <string name="libresign_unexpected_response">LibreSign gaf een onverwacht antwoord terug.</string>
+    <string name="prepare_document_preview_error">Kon dit PDF-bestand niet voorvertonen. Het kan beschadigd, leeg of met een wachtwoord beveiligd zijn.</string>
     <string name="action_libresign_request">LibreSign-verzoek</string>
     <string name="action_search_signers">Ondertekenaars zoeken</string>
     <string name="action_submit_document">Document wordt verzonden</string>
