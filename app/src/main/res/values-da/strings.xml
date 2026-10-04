@@ -14,6 +14,7 @@
     <string name="drawer_signature">Signatur</string>
     <string name="drawer_settings">Indstillinger</string>
     <string name="drawer_about">Om</string>
+    <string name="drawer_prepare_document">Forbered dokument</string>
     <string name="menu_content_description">Menu</string>
 
     <string name="refresh_content_description">Opdater</string>
@@ -36,6 +37,7 @@
     <string name="close_button">Luk</string>
     <string name="back_content_description">Tilbage</string>
     <string name="cancel_button">Annuller</string>
+    <string name="delete_button">Slet</string>
 
     <string name="document_list_empty">Ingen dokumenter endnu.</string>
     <string name="document_untitled">Unavngivet dokument</string>
@@ -95,8 +97,30 @@
     <string name="snooze_duration_three_days">3 dage</string>
 
     <string name="about_title">Om</string>
+    <string name="prepare_document_title">Forbered dokument</string>
+    <string name="prepare_document_received">Modtog \"%1$s\"</string>
+    <string name="prepare_document_choose_account_prompt">Hvilken konto skal forberede dette dokument?</string>
+    <string name="prepare_document_account_label">Konto: %1$s</string>
+    <string name="signer_search_section_title">Underskrivere</string>
+    <string name="signer_search_label">Søg efter en underskriver</string>
+    <string name="signer_remove_content_description">Fjern</string>
+    <string name="prepare_document_tap_to_place_hint">Tryk på dokumentet ovenfor for at placere eller flytte signaturfeltet til %1$s</string>
+    <string name="signer_field_placed_label">Felt placeret</string>
+    <string name="signer_field_size_label">Størrelse: %1$d%%</string>
+    <string name="prepare_document_submit_button">Send til underskrift</string>
+    <string name="prepare_document_submitting">Sender…</string>
+    <string name="prepare_document_submit_success_title">Sendt</string>
+    <string name="prepare_document_submit_success_message">\"%1$s\" er sendt til underskrift.</string>
+    <string name="prepare_document_submit_error_title">Kunne ikke sende dokumentet</string>
+    <string name="document_delete_menu_item">Slet underskriftsanmodning</string>
+    <string name="document_delete_confirm_title">Slette underskriftsanmodningen?</string>
+    <string name="document_delete_confirm_message">Dette fjerner underskriftsanmodningen for \"%1$s\" - selve filen slettes ikke. Dette kan ikke fortrydes.</string>
+    <string name="document_delete_error_dialog_title">Kunne ikke slette underskriftsanmodningen</string>
+    <string name="prepare_document_guide_title">Forbered dokument</string>
+    <string name="prepare_document_guide_message">Åbn Nextcloud-appen, find den PDF, du vil forberede, tryk på \"Send/del\" → \"Send kopi til\", og vælg derefter NextSign. Ikke \"Send link\" - det deler kun et link, ikke selve filen.</string>
+    <string name="prepare_document_guide_open_nextcloud_button">Åbn Nextcloud</string>
     <string name="about_version">Version %1$s</string>
-    <string name="about_description">En native Android-klient til LibreSign, den elektroniske underskriftsapp til Nextcloud. Den forbereder ikke dokumenter eller placerer underskriftsfelter - det sker et andet sted. NextSign viser, hvad der venter på din underskrift, og underskriver det med et tryk via LibreSigns click-to-sign-metode.</string>
+    <string name="about_description">En native Android-klient til LibreSign, den elektroniske underskriftsapp til Nextcloud. NextSign viser, hvad der venter på din underskrift, og underskriver det med et tryk via LibreSigns click-to-sign-metode. Du kan også forberede et dokument til underskrift ved at dele en PDF til NextSign fra Nextcloud-appen.</string>
 
     <string name="signature_title">Signatur</string>
     <string name="signature_has_signature_description">Du har opsat et underskriftsbillede. Dokumenter med et synligt underskriftsfelt vil bruge det, når du underskriver.</string>
@@ -117,6 +141,9 @@
     <string name="downloaded_file_empty">Den downloadede fil er tom.</string>
     <string name="libresign_unexpected_response">LibreSign returnerede et uventet svar.</string>
     <string name="action_libresign_request">LibreSign-forespørgsel</string>
+    <string name="action_search_signers">Søger efter underskrivere</string>
+    <string name="action_submit_document">Sender dokument</string>
+    <string name="action_delete_document">Sletter underskriftsanmodning</string>
     <string name="action_signing">Underskrivning</string>
     <string name="action_validation">Validering</string>
     <string name="action_saving_signature">Gemmer din underskrift</string>

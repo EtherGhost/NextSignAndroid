@@ -3,11 +3,13 @@ package se.cloudsite.nextsign.network
 import com.google.gson.JsonElement
 import retrofit2.Call
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.HTTP
 import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 // Query params baked directly into the path rather than using @Query with default
 // values - Retrofit's dynamic proxy doesn't reliably honor Kotlin default parameter
@@ -53,4 +55,27 @@ interface LibreSignApi {
         @Path("nodeId") nodeId: Int,
         @Body body: SignatureElementUpdateRequest
     ): Call<OcsResponse<SignatureElementsData>>
+
+    // Deliberately no "method" filter - a generic search across whichever identify
+    // methods the server admin has enabled (confirmed decision, see the feasibility
+    // doc). ocs.data is directly a JSON array - verified live against the real
+    // test server, not assumed from the API docs.
+    @GET("identify-account/search?format=json")
+    fun searchIdentifyAccounts(@Query("search") search: String): Call<OcsResponse<List<RawIdentifyAccount>>>
+
+    @Headers("Content-Type: application/json")
+    @POST("request-signature?format=json")
+    fun requestSignature(@Body body: RequestSignatureBody): Call<OcsResponse<RawRequestSignatureResponse>>
+
+    @Headers("Content-Type: application/json")
+    @POST("file-element/{fileUuid}?format=json")
+    fun createFileElement(@Path("fileUuid") fileUuid: String, @Body body: CreateFileElementBody): Call<OcsResponse<RawFileElementResult>>
+
+    // Removes the sign request/preparation only - the underlying Nextcloud file this
+    // app itself uploaded (via request-signature's base64) is not otherwise touched by
+    // this call beyond that, confirmed live. Plain @DELETE works here (unlike PATCH -
+    // see updateSignatureElement above), it's one of the SSO bridge's natively
+    // supported HTTP methods.
+    @DELETE("file/file_id/{fileId}?format=json")
+    fun deleteFile(@Path("fileId") fileId: Int): Call<OcsResponse<JsonElement>>
 }

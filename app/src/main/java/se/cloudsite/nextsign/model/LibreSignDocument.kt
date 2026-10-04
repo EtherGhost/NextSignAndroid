@@ -9,11 +9,19 @@ import se.cloudsite.nextsign.ui.theme.NextSignGreen
 import se.cloudsite.nextsign.ui.theme.NextSignGrey
 
 data class LibreSignDocument(
+    // file/file_id/{fileId} - the id the delete-sign-request endpoint needs, distinct
+    // from uuid (used everywhere else). -1 if the server didn't send one (shouldn't
+    // happen, but delete simply isn't offered for such a document).
+    val fileId: Int,
     val uuid: String,
     // sign/uuid/{signUuid} - empty if this account isn't a signer on this document.
     val signUuid: String,
     val name: String,
     val requestedBy: String,
+    // Bare Nextcloud login of whoever requested this signature - compare against
+    // SingleSignOnAccount.userId (never .name) to decide whether the signed-in
+    // account may delete the sign request. Empty if the server didn't send one.
+    val requestedByUserId: String,
     val createdAt: String,
     val signedAt: String,
     val filePath: String,

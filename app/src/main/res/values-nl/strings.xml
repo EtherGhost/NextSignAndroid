@@ -14,6 +14,7 @@
     <string name="drawer_signature">Handtekening</string>
     <string name="drawer_settings">Instellingen</string>
     <string name="drawer_about">Over</string>
+    <string name="drawer_prepare_document">Document voorbereiden</string>
     <string name="menu_content_description">Menu</string>
 
     <string name="refresh_content_description">Vernieuwen</string>
@@ -36,6 +37,7 @@
     <string name="close_button">Sluiten</string>
     <string name="back_content_description">Terug</string>
     <string name="cancel_button">Annuleren</string>
+    <string name="delete_button">Verwijderen</string>
 
     <string name="document_list_empty">Nog geen documenten.</string>
     <string name="document_untitled">Naamloos document</string>
@@ -95,8 +97,30 @@
     <string name="snooze_duration_three_days">3 dagen</string>
 
     <string name="about_title">Over</string>
+    <string name="prepare_document_title">Document voorbereiden</string>
+    <string name="prepare_document_received">\"%1$s\" ontvangen</string>
+    <string name="prepare_document_choose_account_prompt">Welk account moet dit document voorbereiden?</string>
+    <string name="prepare_document_account_label">Account: %1$s</string>
+    <string name="signer_search_section_title">Ondertekenaars</string>
+    <string name="signer_search_label">Zoek een ondertekenaar</string>
+    <string name="signer_remove_content_description">Verwijderen</string>
+    <string name="prepare_document_tap_to_place_hint">Tik op het document hierboven om het handtekeningveld van %1$s te plaatsen of te verplaatsen</string>
+    <string name="signer_field_placed_label">Veld geplaatst</string>
+    <string name="signer_field_size_label">Grootte: %1$d%%</string>
+    <string name="prepare_document_submit_button">Verzenden voor ondertekening</string>
+    <string name="prepare_document_submitting">Verzenden…</string>
+    <string name="prepare_document_submit_success_title">Verzonden</string>
+    <string name="prepare_document_submit_success_message">\"%1$s\" is verzonden voor ondertekening.</string>
+    <string name="prepare_document_submit_error_title">Kon het document niet verzenden</string>
+    <string name="document_delete_menu_item">Ondertekeningsverzoek verwijderen</string>
+    <string name="document_delete_confirm_title">Ondertekeningsverzoek verwijderen?</string>
+    <string name="document_delete_confirm_message">Dit verwijdert het ondertekeningsverzoek voor \"%1$s\" - het bestand zelf wordt niet verwijderd. Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="document_delete_error_dialog_title">Kon het ondertekeningsverzoek niet verwijderen</string>
+    <string name="prepare_document_guide_title">Document voorbereiden</string>
+    <string name="prepare_document_guide_message">Open de Nextcloud-app, zoek de PDF die je wilt voorbereiden, tik op \"Versturen/delen\" → \"Stuur kopie naar\" en kies dan NextSign. Niet \"Verstuur link\" - dat deelt alleen een link, niet het bestand zelf.</string>
+    <string name="prepare_document_guide_open_nextcloud_button">Nextcloud openen</string>
     <string name="about_version">Versie %1$s</string>
-    <string name="about_description">Een native Android-client voor LibreSign, de elektronische handtekening-app voor Nextcloud. Het bereidt geen documenten voor en plaatst geen handtekeningvelden - dat gebeurt elders. NextSign toont wat op je handtekening wacht en ondertekent het met een tik via LibreSigns click-to-sign-methode.</string>
+    <string name="about_description">Een native Android-client voor LibreSign, de elektronische handtekening-app voor Nextcloud. NextSign toont wat op je handtekening wacht en ondertekent het met een tik via LibreSigns click-to-sign-methode. Je kunt ook een document voorbereiden voor ondertekening door een PDF vanuit de Nextcloud-app naar NextSign te delen.</string>
 
     <string name="signature_title">Handtekening</string>
     <string name="signature_has_signature_description">Je hebt een handtekeningafbeelding ingesteld. Documenten met een zichtbaar handtekeningveld gebruiken deze bij het ondertekenen.</string>
@@ -117,6 +141,9 @@
     <string name="downloaded_file_empty">Het gedownloade bestand is leeg.</string>
     <string name="libresign_unexpected_response">LibreSign gaf een onverwacht antwoord terug.</string>
     <string name="action_libresign_request">LibreSign-verzoek</string>
+    <string name="action_search_signers">Ondertekenaars zoeken</string>
+    <string name="action_submit_document">Document wordt verzonden</string>
+    <string name="action_delete_document">Ondertekeningsverzoek wordt verwijderd</string>
     <string name="action_signing">Ondertekenen</string>
     <string name="action_validation">Validatie</string>
     <string name="action_saving_signature">Je handtekening opslaan</string>

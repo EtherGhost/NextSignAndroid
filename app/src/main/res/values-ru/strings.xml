@@ -14,6 +14,7 @@
     <string name="drawer_signature">Подпись</string>
     <string name="drawer_settings">Настройки</string>
     <string name="drawer_about">О приложении</string>
+    <string name="drawer_prepare_document">Подготовить документ</string>
     <string name="menu_content_description">Меню</string>
 
     <string name="refresh_content_description">Обновить</string>
@@ -36,6 +37,7 @@
     <string name="close_button">Закрыть</string>
     <string name="back_content_description">Назад</string>
     <string name="cancel_button">Отмена</string>
+    <string name="delete_button">Удалить</string>
 
     <string name="document_list_empty">Пока нет документов.</string>
     <string name="document_untitled">Документ без названия</string>
@@ -95,8 +97,30 @@
     <string name="snooze_duration_three_days">3 дня</string>
 
     <string name="about_title">О приложении</string>
+    <string name="prepare_document_title">Подготовить документ</string>
+    <string name="prepare_document_received">Получено \"%1$s\"</string>
+    <string name="prepare_document_choose_account_prompt">Какая учётная запись должна подготовить этот документ?</string>
+    <string name="prepare_document_account_label">Учётная запись: %1$s</string>
+    <string name="signer_search_section_title">Подписанты</string>
+    <string name="signer_search_label">Найти подписанта</string>
+    <string name="signer_remove_content_description">Удалить</string>
+    <string name="prepare_document_tap_to_place_hint">Нажмите на документ выше, чтобы разместить или переместить поле подписи для %1$s</string>
+    <string name="signer_field_placed_label">Поле размещено</string>
+    <string name="signer_field_size_label">Размер: %1$d%%</string>
+    <string name="prepare_document_submit_button">Отправить на подпись</string>
+    <string name="prepare_document_submitting">Отправка…</string>
+    <string name="prepare_document_submit_success_title">Отправлено</string>
+    <string name="prepare_document_submit_success_message">\"%1$s\" отправлен на подпись.</string>
+    <string name="prepare_document_submit_error_title">Не удалось отправить документ</string>
+    <string name="document_delete_menu_item">Удалить запрос на подпись</string>
+    <string name="document_delete_confirm_title">Удалить запрос на подпись?</string>
+    <string name="document_delete_confirm_message">Это удалит запрос на подпись для \"%1$s\" - сам файл не будет удалён. Это действие нельзя отменить.</string>
+    <string name="document_delete_error_dialog_title">Не удалось удалить запрос на подпись</string>
+    <string name="prepare_document_guide_title">Подготовить документ</string>
+    <string name="prepare_document_guide_message">Откройте приложение Nextcloud, найдите нужный PDF-файл, нажмите «Отправить/открыть доступ» → «Отправить копию» и выберите NextSign. Не «Отправить ссылку» - это поделится только ссылкой, а не самим файлом.</string>
+    <string name="prepare_document_guide_open_nextcloud_button">Открыть Nextcloud</string>
     <string name="about_version">Версия %1$s</string>
-    <string name="about_description">Нативный клиент Android для LibreSign - приложения электронной подписи для Nextcloud. Оно не подготавливает документы и не размещает поля подписи - это происходит в другом месте. NextSign показывает, что ожидает вашей подписи, и подписывает это одним касанием с помощью метода click-to-sign LibreSign.</string>
+    <string name="about_description">Нативный клиент Android для LibreSign - приложения электронной подписи для Nextcloud. NextSign показывает, что ожидает вашей подписи, и подписывает это одним касанием с помощью метода click-to-sign LibreSign. Вы также можете подготовить документ к подписанию, поделившись PDF-файлом с NextSign из приложения Nextcloud.</string>
 
     <string name="signature_title">Подпись</string>
     <string name="signature_has_signature_description">У вас настроено изображение подписи. Документы с видимым полем подписи будут использовать его при подписании.</string>
@@ -117,6 +141,9 @@
     <string name="downloaded_file_empty">Загруженный файл пуст.</string>
     <string name="libresign_unexpected_response">LibreSign вернул неожиданный ответ.</string>
     <string name="action_libresign_request">Запрос к LibreSign</string>
+    <string name="action_search_signers">Поиск подписантов</string>
+    <string name="action_submit_document">Отправка документа</string>
+    <string name="action_delete_document">Удаление запроса на подпись</string>
     <string name="action_signing">Подписание</string>
     <string name="action_validation">Проверка</string>
     <string name="action_saving_signature">Сохранение вашей подписи</string>

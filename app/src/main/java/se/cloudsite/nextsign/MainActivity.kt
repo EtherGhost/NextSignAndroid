@@ -6,7 +6,9 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.Base64
 import android.net.Uri
+import android.provider.OpenableColumns
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -72,11 +74,14 @@ import com.nextcloud.android.sso.helper.SingleAccountHelper
 import com.nextcloud.android.sso.model.SingleSignOnAccount
 import java.io.File
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.unifiedpush.android.connector.UnifiedPush
 import se.cloudsite.nextsign.model.LibreSignDocument
+import se.cloudsite.nextsign.model.PdfFieldPlacement
 import se.cloudsite.nextsign.model.SignatureElement
+import se.cloudsite.nextsign.model.SignerCandidate
 import se.cloudsite.nextsign.model.ValidationSummary
 import se.cloudsite.nextsign.network.ApiProvider
 import se.cloudsite.nextsign.push.DocumentPollWorker
@@ -86,12 +91,19 @@ import se.cloudsite.nextsign.repository.DownloadResult
 import se.cloudsite.nextsign.repository.LibreSignRepository
 import se.cloudsite.nextsign.repository.LoadDocumentsResult
 import se.cloudsite.nextsign.repository.SaveSignatureElementResult
+import se.cloudsite.nextsign.repository.SearchSignersResult
 import se.cloudsite.nextsign.repository.SignResult
+import se.cloudsite.nextsign.repository.DeleteDocumentResult
+import se.cloudsite.nextsign.repository.SubmitPreparedDocumentResult
 import se.cloudsite.nextsign.repository.SignatureElementsResult
 import se.cloudsite.nextsign.repository.ValidateResult
 import se.cloudsite.nextsign.ui.about.AboutScreen
+import se.cloudsite.nextsign.ui.preparedocument.PrepareDocumentGuideScreen
+import se.cloudsite.nextsign.ui.preparedocument.PrepareDocumentScreen
+import se.cloudsite.nextsign.util.PdfPreviewRenderer
 import se.cloudsite.nextsign.ui.account.AccountScreen
 import se.cloudsite.nextsign.ui.common.AccountAvatar
+import se.cloudsite.nextsign.ui.documentdetail.DeleteDocumentConfirmDialog
 import se.cloudsite.nextsign.ui.documentdetail.DocumentDetailDialog
 import se.cloudsite.nextsign.ui.documentdetail.MessageDialog
 import se.cloudsite.nextsign.ui.documentdetail.SignConfirmDialog
@@ -114,7 +126,7 @@ import se.cloudsite.nextsign.util.SnoozeDurationPreference
 import se.cloudsite.nextsign.util.ThemeMode
 import se.cloudsite.nextsign.util.ThemePreference
 
-private enum class Screen { DOCUMENT_LIST, SIGNATURE_SETUP, SIGNATURE_DRAW, SETTINGS, ABOUT, ACCOUNT }
+private enum class Screen { DOCUMENT_LIST, SIGNATURE_SETUP, SIGNATURE_DRAW, SETTINGS, ABOUT, ACCOUNT, PREPARE_DOCUMENT, PREPARE_DOCUMENT_GUIDE }
 
 // Uses AccountImporter.pickNewAccount()/onActivityResult(), not the newer
 // ImportSsoAccount ActivityResultContract shown in the library's current README -
@@ -122,6 +134,14 @@ private enum class Screen { DOCUMENT_LIST, SIGNATURE_SETUP, SIGNATURE_DRAW, SETT
 // inspecting the actual AAR), only on the library's unreleased master branch. This is
 // the same pattern the real Nextcloud Notes/Deck apps ship with today.
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        // Default signature field size in PDF points - matches the size used in the
+        // earlier live API spike. The size slider scales both dimensions from this
+        // base together (see PrepareDocumentScreen), not independently.
+        private const val FIELD_BASE_WIDTH = 150f
+        private const val FIELD_BASE_HEIGHT = 50f
+    }
 
     // Applied here too, not just in NextSignApplication - an Activity's own base
     // Context is a fresh wrap of the application Context, not guaranteed to inherit an
@@ -152,6 +172,30 @@ class MainActivity : ComponentActivity() {
     private var signSucceededName: String? by mutableStateOf(null)
     private var signErrorMessage: String? by mutableStateOf(null)
     private var validationResult: ValidationSummary? by mutableStateOf(null)
+    // Step 1 of document preparation: a PDF shared in from the Nextcloud app. Just
+    // held and shown here for now - no API calls yet, see the feasibility doc.
+    private var preparedDocumentUri: Uri? by mutableStateOf(null)
+    private var preparedDocumentName: String by mutableStateOf("")
+    // null = not yet chosen (only asked when more than one account is known - see
+    // handleShareIntent). The share intent itself carries no account information.
+    private var preparedDocumentAccountName: String? by mutableStateOf(null)
+    private var preparedDocumentPreviewBitmap: Bitmap? by mutableStateOf(null)
+    private var preparedDocumentPreviewLoading: Boolean by mutableStateOf(false)
+    private var signerSearchQuery: String by mutableStateOf("")
+    private var signerSearchResults: List<SignerCandidate> by mutableStateOf(emptyList())
+    private var signerSearchLoading: Boolean by mutableStateOf(false)
+    private var selectedSigners: List<SignerCandidate> by mutableStateOf(emptyList())
+    private var placedFields: Map<String, PdfFieldPlacement> by mutableStateOf(emptyMap())
+    // Explicit "which signer does the next document tap/slider act on" - set by
+    // tapping a signer row (see PrepareDocumentScreen). Falls back to the first
+    // signer without a field yet, then the most recently added one, so there's
+    // always a sensible target even before the user taps anything.
+    private var armedSignerIdentify: String? by mutableStateOf(null)
+    private var isSubmittingDocument: Boolean by mutableStateOf(false)
+    private var submitSuccessMessage: String? by mutableStateOf(null)
+    private var submitErrorMessage: String? by mutableStateOf(null)
+    private var pendingDeleteDocument: LibreSignDocument? by mutableStateOf(null)
+    private var deleteErrorMessage: String? by mutableStateOf(null)
     private var validationErrorMessage: String? by mutableStateOf(null)
     private var downloadErrorMessage: String? by mutableStateOf(null)
 
@@ -234,6 +278,8 @@ class MainActivity : ComponentActivity() {
         // account actually needs polling is decided inside doWork(), not here.
         DocumentPollWorker.enqueue(this)
 
+        handleShareIntent(intent)
+
         setContent {
             NextSignTheme(themeMode = themeMode) {
                 Surface(modifier = Modifier.fillMaxSize()) {
@@ -289,6 +335,14 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             )
                                             NavigationDrawerItem(
+                                                label = { Text(stringResource(R.string.drawer_prepare_document)) },
+                                                selected = false,
+                                                onClick = {
+                                                    drawerScope.launch { drawerState.close() }
+                                                    currentScreen = Screen.PREPARE_DOCUMENT_GUIDE
+                                                }
+                                            )
+                                            NavigationDrawerItem(
                                                 label = { Text(stringResource(R.string.drawer_settings)) },
                                                 selected = false,
                                                 onClick = {
@@ -337,7 +391,27 @@ class MainActivity : ComponentActivity() {
                                         onOpenFileClick = { document ->
                                             selectedDocumentUuid = null
                                             downloadAndOpen(currentAccount, document)
-                                        }
+                                        },
+                                        onDeleteDocument = { document -> pendingDeleteDocument = document }
+                                    )
+                                }
+
+                                pendingDeleteDocument?.let { document ->
+                                    DeleteDocumentConfirmDialog(
+                                        documentName = document.name,
+                                        onConfirm = {
+                                            pendingDeleteDocument = null
+                                            deleteDocument(currentAccount, document)
+                                        },
+                                        onDismiss = { pendingDeleteDocument = null }
+                                    )
+                                }
+
+                                deleteErrorMessage?.let { message ->
+                                    MessageDialog(
+                                        title = stringResource(R.string.document_delete_error_dialog_title),
+                                        message = message,
+                                        onDismiss = { deleteErrorMessage = null }
                                     )
                                 }
 
@@ -360,6 +434,22 @@ class MainActivity : ComponentActivity() {
                                             name.ifEmpty { stringResource(R.string.document_untitled) }
                                         ),
                                         onDismiss = { signSucceededName = null }
+                                    )
+                                }
+
+                                submitSuccessMessage?.let { name ->
+                                    MessageDialog(
+                                        title = stringResource(R.string.prepare_document_submit_success_title),
+                                        message = stringResource(R.string.prepare_document_submit_success_message, name),
+                                        onDismiss = { submitSuccessMessage = null }
+                                    )
+                                }
+
+                                submitErrorMessage?.let { message ->
+                                    MessageDialog(
+                                        title = stringResource(R.string.prepare_document_submit_error_title),
+                                        message = message,
+                                        onDismiss = { submitErrorMessage = null }
                                     )
                                 }
 
@@ -445,6 +535,139 @@ class MainActivity : ComponentActivity() {
                             )
 
                             Screen.ABOUT -> AboutScreen(onBack = { currentScreen = Screen.DOCUMENT_LIST })
+
+                            Screen.PREPARE_DOCUMENT_GUIDE -> PrepareDocumentGuideScreen(
+                                nextcloudInstalled = packageManager.getLaunchIntentForPackage("com.nextcloud.client") != null,
+                                onOpenNextcloud = {
+                                    packageManager.getLaunchIntentForPackage("com.nextcloud.client")?.let { startActivity(it) }
+                                },
+                                onInstallNextcloud = { openPlayStoreListing(this@MainActivity, "com.nextcloud.client") },
+                                onBack = { currentScreen = Screen.DOCUMENT_LIST }
+                            )
+
+                            Screen.PREPARE_DOCUMENT -> {
+                                val chosenAccountName = preparedDocumentAccountName
+                                // Debounced search - the identify-account/search endpoint
+                                // does a real server round trip per keystroke otherwise.
+                                // Resolved non-destructively (AccountImporter, not
+                                // SingleAccountHelper) - picking an account for this one
+                                // document must not disturb the app's own active account.
+                                LaunchedEffect(signerSearchQuery, chosenAccountName) {
+                                    if (chosenAccountName == null || signerSearchQuery.isBlank()) {
+                                        signerSearchResults = emptyList()
+                                        signerSearchLoading = false
+                                        return@LaunchedEffect
+                                    }
+                                    signerSearchLoading = true
+                                    delay(400)
+                                    val resolvedAccount = try {
+                                        AccountImporter.getSingleSignOnAccount(this@MainActivity, chosenAccountName)
+                                    } catch (e: NextcloudFilesAppAccountNotFoundException) {
+                                        null
+                                    }
+                                    signerSearchResults = if (resolvedAccount != null) {
+                                        when (val result = withContext(Dispatchers.IO) { repository.searchSigners(resolvedAccount, signerSearchQuery) }) {
+                                            is SearchSignersResult.Success -> result.candidates
+                                            is SearchSignersResult.Failure -> emptyList()
+                                        }
+                                    } else {
+                                        emptyList()
+                                    }
+                                    signerSearchLoading = false
+                                }
+                                val effectiveArmedIdentify = armedSignerIdentify
+                                    ?.takeIf { id -> selectedSigners.any { it.identify == id } }
+                                    ?: selectedSigners.firstOrNull { placedFields[it.identify] == null }?.identify
+                                    ?: selectedSigners.lastOrNull()?.identify
+                                val armedField = effectiveArmedIdentify?.let { placedFields[it] }
+
+                                PrepareDocumentScreen(
+                                    documentName = preparedDocumentName,
+                                    knownAccountNames = AccountHistory.list(this@MainActivity),
+                                    selectedAccountName = preparedDocumentAccountName,
+                                    previewBitmap = preparedDocumentPreviewBitmap,
+                                    previewLoading = preparedDocumentPreviewLoading,
+                                    signerSearchQuery = signerSearchQuery,
+                                    onSignerSearchQueryChange = { signerSearchQuery = it },
+                                    signerSearchResults = signerSearchResults,
+                                    signerSearchLoading = signerSearchLoading,
+                                    selectedSigners = selectedSigners,
+                                    placedFields = placedFields,
+                                    armedSignerIdentify = effectiveArmedIdentify,
+                                    onArmSigner = { identify -> armedSignerIdentify = identify },
+                                    fieldSizeFactor = armedField?.let { it.width / FIELD_BASE_WIDTH } ?: 1f,
+                                    onFieldSizeFactorChange = { factor ->
+                                        val id = effectiveArmedIdentify
+                                        val old = id?.let { placedFields[it] }
+                                        if (id != null && old != null) {
+                                            val centerX = old.left + old.width / 2
+                                            val centerY = old.top + old.height / 2
+                                            val newWidth = FIELD_BASE_WIDTH * factor
+                                            val newHeight = FIELD_BASE_HEIGHT * factor
+                                            val bitmap = preparedDocumentPreviewBitmap
+                                            val maxLeft = if (bitmap != null) (bitmap.width - newWidth).coerceAtLeast(0f) else centerX
+                                            val maxTop = if (bitmap != null) (bitmap.height - newHeight).coerceAtLeast(0f) else centerY
+                                            val newLeft = (centerX - newWidth / 2).coerceIn(0f, maxLeft)
+                                            val newTop = (centerY - newHeight / 2).coerceIn(0f, maxTop)
+                                            placedFields = placedFields + (id to PdfFieldPlacement(newLeft, newTop, newWidth, newHeight))
+                                        }
+                                    },
+                                    onAddSigner = { candidate ->
+                                        if (selectedSigners.none { it.identify == candidate.identify }) {
+                                            selectedSigners = selectedSigners + candidate
+                                        }
+                                        signerSearchQuery = ""
+                                        signerSearchResults = emptyList()
+                                    },
+                                    onRemoveSigner = { candidate ->
+                                        selectedSigners = selectedSigners.filterNot { it.identify == candidate.identify }
+                                        placedFields = placedFields - candidate.identify
+                                        if (armedSignerIdentify == candidate.identify) armedSignerIdentify = null
+                                    },
+                                    onTapPlaceField = { xPt, yPt ->
+                                        val targetIdentify = effectiveArmedIdentify
+                                        if (targetIdentify != null) {
+                                            val bitmap = preparedDocumentPreviewBitmap
+                                            val currentField = placedFields[targetIdentify]
+                                            val fieldWidth = currentField?.width ?: FIELD_BASE_WIDTH
+                                            val fieldHeight = currentField?.height ?: FIELD_BASE_HEIGHT
+                                            val maxLeft = if (bitmap != null) (bitmap.width - fieldWidth).coerceAtLeast(0f) else xPt
+                                            val maxTop = if (bitmap != null) (bitmap.height - fieldHeight).coerceAtLeast(0f) else yPt
+                                            val left = (xPt - fieldWidth / 2).coerceIn(0f, maxLeft)
+                                            val top = (yPt - fieldHeight / 2).coerceIn(0f, maxTop)
+                                            placedFields = placedFields + (targetIdentify to PdfFieldPlacement(left = left, top = top, width = fieldWidth, height = fieldHeight))
+                                            armedSignerIdentify = targetIdentify
+                                        }
+                                    },
+                                    onDragField = { identify, dxPt, dyPt ->
+                                        val old = placedFields[identify]
+                                        if (old != null) {
+                                            val bitmap = preparedDocumentPreviewBitmap
+                                            val maxLeft = if (bitmap != null) (bitmap.width - old.width).coerceAtLeast(0f) else Float.MAX_VALUE
+                                            val maxTop = if (bitmap != null) (bitmap.height - old.height).coerceAtLeast(0f) else Float.MAX_VALUE
+                                            val newLeft = (old.left + dxPt).coerceIn(0f, maxLeft)
+                                            val newTop = (old.top + dyPt).coerceIn(0f, maxTop)
+                                            placedFields = placedFields + (identify to old.copy(left = newLeft, top = newTop))
+                                            armedSignerIdentify = identify
+                                        }
+                                    },
+                                    isSubmitting = isSubmittingDocument,
+                                    onSubmit = { submitPreparedDocument() },
+                                    onSelectAccount = { name -> preparedDocumentAccountName = name },
+                                    onBack = {
+                                        preparedDocumentUri = null
+                                        preparedDocumentName = ""
+                                        preparedDocumentAccountName = null
+                                        preparedDocumentPreviewBitmap = null
+                                        signerSearchQuery = ""
+                                        signerSearchResults = emptyList()
+                                        selectedSigners = emptyList()
+                                        placedFields = emptyMap()
+                                        armedSignerIdentify = null
+                                        currentScreen = Screen.DOCUMENT_LIST
+                                    }
+                                )
+                            }
 
                             Screen.ACCOUNT -> AccountScreen(
                                 knownAccountNames = AccountHistory.list(this@MainActivity),
@@ -670,7 +893,125 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        if (handleShareIntent(intent)) return
         account?.let { refresh(it) }
+    }
+
+    // Step 1 of document preparation - a PDF shared in from the Nextcloud app lands
+    // here (ACTION_SEND, see the manifest's intent-filter). Only reads the file's
+    // display name via the content resolver for now; the file's own bytes aren't
+    // touched until a later step actually submits it. Returns true if this intent was
+    // actually a share (so callers can skip their normal handling).
+    private fun handleShareIntent(intent: Intent): Boolean {
+        if (intent.action != Intent.ACTION_SEND) return false
+        // Some senders put the file on ClipData instead of (or in addition to) the
+        // plain extra - fall back to it rather than assuming EXTRA_STREAM is always set.
+        val uri = run {
+            val fromExtra = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra(Intent.EXTRA_STREAM)
+            }
+            fromExtra ?: intent.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.uri
+        }
+        if (uri == null) return false
+        preparedDocumentUri = uri
+        preparedDocumentName = queryDisplayName(uri)
+        // The share carries no account info - default straight through when only
+        // one account is known, otherwise make the user pick (see PrepareDocumentScreen).
+        val knownAccounts = AccountHistory.list(this)
+        preparedDocumentAccountName = if (knownAccounts.size <= 1) {
+            knownAccounts.firstOrNull() ?: account?.name
+        } else {
+            null
+        }
+        currentScreen = Screen.PREPARE_DOCUMENT
+        preparedDocumentPreviewBitmap = null
+        preparedDocumentPreviewLoading = true
+        lifecycleScope.launch {
+            val bitmap = withContext(Dispatchers.IO) { PdfPreviewRenderer.renderFirstPage(this@MainActivity, uri) }
+            preparedDocumentPreviewBitmap = bitmap
+            preparedDocumentPreviewLoading = false
+        }
+        return true
+    }
+
+    private fun queryDisplayName(uri: Uri): String {
+        contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (nameIndex >= 0 && cursor.moveToFirst()) {
+                return cursor.getString(nameIndex) ?: ""
+            }
+        }
+        return ""
+    }
+
+    private fun submitPreparedDocument() {
+        val uri = preparedDocumentUri ?: return
+        val accountName = preparedDocumentAccountName ?: return
+        val fileName = preparedDocumentName.ifEmpty { getString(R.string.document_untitled) }
+        val signers = selectedSigners
+        val fields = placedFields
+        isSubmittingDocument = true
+        lifecycleScope.launch {
+            val resolvedAccount = try {
+                AccountImporter.getSingleSignOnAccount(this@MainActivity, accountName)
+            } catch (e: NextcloudFilesAppAccountNotFoundException) {
+                null
+            }
+            if (resolvedAccount == null) {
+                isSubmittingDocument = false
+                submitErrorMessage = getString(R.string.account_switch_failed)
+                return@launch
+            }
+            val base64 = withContext(Dispatchers.IO) {
+                contentResolver.openInputStream(uri)?.use { input -> Base64.encodeToString(input.readBytes(), Base64.NO_WRAP) }
+            }
+            if (base64 == null) {
+                isSubmittingDocument = false
+                submitErrorMessage = getString(R.string.downloaded_file_empty)
+                return@launch
+            }
+            val result = withContext(Dispatchers.IO) {
+                repository.submitPreparedDocument(resolvedAccount, fileName, base64, signers, fields)
+            }
+            isSubmittingDocument = false
+            when (result) {
+                is SubmitPreparedDocumentResult.Success -> {
+                    submitSuccessMessage = fileName
+                    preparedDocumentUri = null
+                    preparedDocumentName = ""
+                    preparedDocumentAccountName = null
+                    preparedDocumentPreviewBitmap = null
+                    signerSearchQuery = ""
+                    signerSearchResults = emptyList()
+                    selectedSigners = emptyList()
+                    placedFields = emptyMap()
+                    armedSignerIdentify = null
+                    currentScreen = Screen.DOCUMENT_LIST
+                    // Only refresh the visible list if the document was prepared under
+                    // the app's currently active account - otherwise this would yank
+                    // the user's foreground view over to a different account's data.
+                    if (accountName == account?.name) {
+                        account?.let { refresh(it) }
+                    }
+                }
+                is SubmitPreparedDocumentResult.Failure -> {
+                    submitErrorMessage = result.message
+                }
+            }
+        }
+    }
+
+    private fun deleteDocument(account: SingleSignOnAccount, document: LibreSignDocument) {
+        lifecycleScope.launch {
+            val result = withContext(Dispatchers.IO) { repository.deleteDocument(account, document.fileId) }
+            when (result) {
+                is DeleteDocumentResult.Success -> refresh(account)
+                is DeleteDocumentResult.Failure -> deleteErrorMessage = result.message
+            }
+        }
     }
 
     private fun refresh(account: SingleSignOnAccount) {
@@ -1158,7 +1499,8 @@ private fun AppScreen(
     onDismissDetail: () -> Unit,
     onSignClick: (LibreSignDocument) -> Unit,
     onValidateClick: (LibreSignDocument) -> Unit,
-    onOpenFileClick: (LibreSignDocument) -> Unit
+    onOpenFileClick: (LibreSignDocument) -> Unit,
+    onDeleteDocument: (LibreSignDocument) -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -1193,8 +1535,10 @@ private fun AppScreen(
                 documents = documents,
                 loading = loading,
                 errorMessage = errorMessage,
+                currentAccountUserId = account.userId,
                 onRefresh = onRefresh,
-                onDocumentClick = onDocumentClick
+                onDocumentClick = onDocumentClick,
+                onDeleteDocument = onDeleteDocument
             )
         }
     }

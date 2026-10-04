@@ -4,16 +4,26 @@ import android.content.Context
 import androidx.annotation.StringRes
 import com.nextcloud.android.sso.model.SingleSignOnAccount
 import retrofit2.Response
+import kotlin.math.roundToInt
 import se.cloudsite.nextsign.R
 import se.cloudsite.nextsign.model.LibreSignDocument
+import se.cloudsite.nextsign.model.PdfFieldPlacement
 import se.cloudsite.nextsign.model.SignatureElement
+import se.cloudsite.nextsign.model.SignerCandidate
 import se.cloudsite.nextsign.model.SignerStatus
 import se.cloudsite.nextsign.model.SignerVerdict
 import se.cloudsite.nextsign.model.ValidationSummary
 import se.cloudsite.nextsign.model.VisibleElementRef
 import se.cloudsite.nextsign.network.ApiProvider
+import se.cloudsite.nextsign.network.CreateFileElementBody
+import se.cloudsite.nextsign.network.FileElementCoordinates
+import se.cloudsite.nextsign.network.RawIdentifyAccount
 import se.cloudsite.nextsign.network.RawLibreSignFile
 import se.cloudsite.nextsign.network.RawSignatureElement
+import se.cloudsite.nextsign.network.RequestSignatureBody
+import se.cloudsite.nextsign.network.RequestSignatureFile
+import se.cloudsite.nextsign.network.RequestSignatureIdentifyMethod
+import se.cloudsite.nextsign.network.RequestSignatureSigner
 import se.cloudsite.nextsign.network.SignElementBody
 import se.cloudsite.nextsign.network.SignRequestBody
 import se.cloudsite.nextsign.network.SignatureElementCreateRequest
@@ -44,6 +54,21 @@ sealed class SignatureElementsResult {
 sealed class SaveSignatureElementResult {
     data class Success(val elements: List<SignatureElement>) : SaveSignatureElementResult()
     data class Failure(val message: String) : SaveSignatureElementResult()
+}
+
+sealed class SearchSignersResult {
+    data class Success(val candidates: List<SignerCandidate>) : SearchSignersResult()
+    data class Failure(val message: String) : SearchSignersResult()
+}
+
+sealed class SubmitPreparedDocumentResult {
+    object Success : SubmitPreparedDocumentResult()
+    data class Failure(val message: String) : SubmitPreparedDocumentResult()
+}
+
+sealed class DeleteDocumentResult {
+    object Success : DeleteDocumentResult()
+    data class Failure(val message: String) : DeleteDocumentResult()
 }
 
 // Turns the raw file/list response into the app's own domain model, mirroring the
@@ -204,10 +229,12 @@ class LibreSignRepository(private val context: Context) {
         }
 
         return LibreSignDocument(
+            fileId = raw.id ?: -1,
             uuid = uuid,
             signUuid = mySigner?.signRequestUuid.orEmpty(),
             name = raw.name.orEmpty(),
             requestedBy = raw.requestedBy?.displayName.orEmpty(),
+            requestedByUserId = raw.requestedBy?.userId.orEmpty(),
             createdAt = raw.createdAt.orEmpty(),
             signedAt = mySigner?.signed.orEmpty(),
             filePath = raw.files?.firstOrNull()?.file.orEmpty(),
@@ -217,6 +244,111 @@ class LibreSignRepository(private val context: Context) {
             visibleElements = visibleElements,
             messageForMe = mySigner?.description.orEmpty()
         )
+    }
+
+    fun searchSigners(account: SingleSignOnAccount, query: String): SearchSignersResult {
+        return try {
+            val api = ApiProvider.getLibreSignApi(context, account)
+            val response = api.searchIdentifyAccounts(query).execute()
+            if (!response.isSuccessful) {
+                return SearchSignersResult.Failure(errorMessage(response, R.string.action_search_signers))
+            }
+            val raw = response.body()?.ocs?.data.orEmpty()
+            SearchSignersResult.Success(raw.mapNotNull { mapSignerCandidate(it) })
+        } catch (e: Exception) {
+            SearchSignersResult.Failure(e.message ?: e.toString())
+        }
+    }
+
+    private fun mapSignerCandidate(raw: RawIdentifyAccount): SignerCandidate? {
+        val identify = raw.identify ?: return null
+        return SignerCandidate(
+            identify = identify,
+            displayName = raw.displayName ?: identify,
+            subname = raw.subname.orEmpty(),
+            isNoUser = raw.isNoUser == true,
+            method = raw.method.orEmpty()
+        )
+    }
+
+    // Creates the sign request (uploading the file in the same call) and then places
+    // one file-element per signer that has a field. The returned signers[] order does
+    // NOT match submission order - verified live with two signers - so each one is
+    // matched back by its own identifyMethods[0].value, not by array position.
+    fun submitPreparedDocument(
+        account: SingleSignOnAccount,
+        fileName: String,
+        base64: String,
+        signers: List<SignerCandidate>,
+        fieldsByIdentify: Map<String, PdfFieldPlacement>
+    ): SubmitPreparedDocumentResult {
+        return try {
+            val api = ApiProvider.getLibreSignApi(context, account)
+            val body = RequestSignatureBody(
+                file = RequestSignatureFile(base64 = base64, name = fileName),
+                name = fileName,
+                signers = signers.map { signer ->
+                    RequestSignatureSigner(
+                        identifyMethods = listOf(RequestSignatureIdentifyMethod(method = signer.method, value = signer.identify)),
+                        displayName = signer.displayName
+                    )
+                }
+            )
+            val response = api.requestSignature(body).execute()
+            if (!response.isSuccessful) {
+                return SubmitPreparedDocumentResult.Failure(errorMessage(response, R.string.action_submit_document))
+            }
+            val data = response.body()?.ocs?.data
+                ?: return SubmitPreparedDocumentResult.Failure(context.getString(R.string.libresign_unexpected_response))
+            val fileId = data.id
+                ?: return SubmitPreparedDocumentResult.Failure(context.getString(R.string.libresign_unexpected_response))
+            val fileUuid = data.uuid
+                ?: return SubmitPreparedDocumentResult.Failure(context.getString(R.string.libresign_unexpected_response))
+            val returnedSigners = data.signers.orEmpty()
+
+            for (signer in signers) {
+                val field = fieldsByIdentify[signer.identify] ?: continue
+                val signRequestId = returnedSigners
+                    .firstOrNull { rs -> rs.identifyMethods.orEmpty().any { it.value == signer.identify } }
+                    ?.signRequestId
+                    ?: continue
+                val elementBody = CreateFileElementBody(
+                    signRequestId = signRequestId,
+                    fileId = fileId,
+                    coordinates = FileElementCoordinates(
+                        page = 1,
+                        left = field.left.roundToInt(),
+                        top = field.top.roundToInt(),
+                        width = field.width.roundToInt(),
+                        height = field.height.roundToInt()
+                    )
+                )
+                val elementResponse = api.createFileElement(fileUuid, elementBody).execute()
+                if (!elementResponse.isSuccessful) {
+                    return SubmitPreparedDocumentResult.Failure(errorMessage(elementResponse, R.string.action_submit_document))
+                }
+            }
+            SubmitPreparedDocumentResult.Success
+        } catch (e: Exception) {
+            SubmitPreparedDocumentResult.Failure(e.message ?: e.toString())
+        }
+    }
+
+    // Removes the sign request/preparation only - verified live that the underlying
+    // Nextcloud file this app itself created (via request-signature's base64 upload)
+    // isn't left dangling in some broken half-state by this, since that upload only
+    // ever exists because of the sign request in the first place.
+    fun deleteDocument(account: SingleSignOnAccount, fileId: Int): DeleteDocumentResult {
+        return try {
+            val api = ApiProvider.getLibreSignApi(context, account)
+            val response = api.deleteFile(fileId).execute()
+            if (!response.isSuccessful) {
+                return DeleteDocumentResult.Failure(errorMessage(response, R.string.action_delete_document))
+            }
+            DeleteDocumentResult.Success
+        } catch (e: Exception) {
+            DeleteDocumentResult.Failure(e.message ?: e.toString())
+        }
     }
 
     // The SSO bridge does NOT preserve the real server's OCS error JSON on a non-2xx

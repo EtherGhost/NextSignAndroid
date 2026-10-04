@@ -11,6 +11,10 @@ data class FileListData(
 )
 
 data class RawLibreSignFile(
+    // Matches each entry's files[0].id - verified live (top-level id always equals
+    // files[0].id for every document this app lists, since it only ever deals with
+    // one file per sign request). This is the "fileId" the delete endpoint needs.
+    val id: Int?,
     val uuid: String?,
     val name: String?,
     // 0=draft, 1=ready to sign, 2=partially signed, 3=fully signed, 4=deleted.
@@ -22,7 +26,11 @@ data class RawLibreSignFile(
 )
 
 data class RawRequestedBy(
-    val displayName: String?
+    val displayName: String?,
+    // Bare Nextcloud login (e.g. "tobbe") - verified live against the real server.
+    // Compare against SingleSignOnAccount.userId, never .name (the SSO-formatted
+    // "tobbe@cloudsite.se" compound string) or the displayName above.
+    val userId: String?
 )
 
 data class RawFileEntry(

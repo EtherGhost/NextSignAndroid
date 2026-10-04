@@ -14,6 +14,7 @@
     <string name="drawer_signature">Firma</string>
     <string name="drawer_settings">Ajustes</string>
     <string name="drawer_about">Acerca de</string>
+    <string name="drawer_prepare_document">Preparar documento</string>
     <string name="menu_content_description">Menú</string>
 
     <string name="refresh_content_description">Actualizar</string>
@@ -36,6 +37,7 @@
     <string name="close_button">Cerrar</string>
     <string name="back_content_description">Atrás</string>
     <string name="cancel_button">Cancelar</string>
+    <string name="delete_button">Eliminar</string>
 
     <string name="document_list_empty">Aún no hay documentos.</string>
     <string name="document_untitled">Documento sin título</string>
@@ -95,8 +97,30 @@
     <string name="snooze_duration_three_days">3 días</string>
 
     <string name="about_title">Acerca de</string>
+    <string name="prepare_document_title">Preparar documento</string>
+    <string name="prepare_document_received">Se recibió \"%1$s\"</string>
+    <string name="prepare_document_choose_account_prompt">¿Qué cuenta debe preparar este documento?</string>
+    <string name="prepare_document_account_label">Cuenta: %1$s</string>
+    <string name="signer_search_section_title">Firmantes</string>
+    <string name="signer_search_label">Buscar un firmante</string>
+    <string name="signer_remove_content_description">Quitar</string>
+    <string name="prepare_document_tap_to_place_hint">Toca el documento de arriba para colocar o mover el campo de firma de %1$s</string>
+    <string name="signer_field_placed_label">Campo colocado</string>
+    <string name="signer_field_size_label">Tamaño: %1$d%%</string>
+    <string name="prepare_document_submit_button">Enviar para firmar</string>
+    <string name="prepare_document_submitting">Enviando…</string>
+    <string name="prepare_document_submit_success_title">Enviado</string>
+    <string name="prepare_document_submit_success_message">\"%1$s\" se ha enviado para firmar.</string>
+    <string name="prepare_document_submit_error_title">No se pudo enviar el documento</string>
+    <string name="document_delete_menu_item">Eliminar solicitud de firma</string>
+    <string name="document_delete_confirm_title">¿Eliminar la solicitud de firma?</string>
+    <string name="document_delete_confirm_message">Esto elimina la solicitud de firma de \"%1$s\" - el archivo en sí no se eliminará. Esto no se puede deshacer.</string>
+    <string name="document_delete_error_dialog_title">No se pudo eliminar la solicitud de firma</string>
+    <string name="prepare_document_guide_title">Preparar documento</string>
+    <string name="prepare_document_guide_message">Abre la aplicación de Nextcloud, busca el PDF que quieres preparar, toca \"Enviar/compartir\" → \"Enviar copia a\" y luego elige NextSign. No \"Enviar enlace\" - eso solo comparte un enlace, no el archivo en sí.</string>
+    <string name="prepare_document_guide_open_nextcloud_button">Abrir Nextcloud</string>
     <string name="about_version">Versión %1$s</string>
-    <string name="about_description">Un cliente nativo de Android para LibreSign, la aplicación de firma electrónica de Nextcloud. No prepara documentos ni coloca campos de firma - eso ocurre en otro lugar. NextSign muestra lo que espera tu firma y lo firma con un toque usando el método click-to-sign de LibreSign.</string>
+    <string name="about_description">Un cliente nativo de Android para LibreSign, la aplicación de firma electrónica de Nextcloud. NextSign muestra lo que espera tu firma y lo firma con un toque usando el método click-to-sign de LibreSign. También puedes preparar un documento para firmar compartiendo un PDF a NextSign desde la aplicación de Nextcloud.</string>
 
     <string name="signature_title">Firma</string>
     <string name="signature_has_signature_description">Tienes una imagen de firma configurada. Los documentos con un campo de firma visible la usarán al firmar.</string>
@@ -117,6 +141,9 @@
     <string name="downloaded_file_empty">El archivo descargado está vacío.</string>
     <string name="libresign_unexpected_response">LibreSign devolvió una respuesta inesperada.</string>
     <string name="action_libresign_request">Solicitud a LibreSign</string>
+    <string name="action_search_signers">Buscando firmantes</string>
+    <string name="action_submit_document">Enviando documento</string>
+    <string name="action_delete_document">Eliminando solicitud de firma</string>
     <string name="action_signing">Firma</string>
     <string name="action_validation">Validación</string>
     <string name="action_saving_signature">Guardando tu firma</string>

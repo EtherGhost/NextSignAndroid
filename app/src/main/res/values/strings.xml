@@ -15,6 +15,7 @@
     <string name="drawer_signature">Signature</string>
     <string name="drawer_settings">Settings</string>
     <string name="drawer_about">About</string>
+    <string name="drawer_prepare_document">Prepare a document</string>
     <string name="menu_content_description">Menu</string>
 
     <!-- Top bar -->
@@ -41,6 +42,7 @@
     <string name="close_button">Close</string>
     <string name="back_content_description">Back</string>
     <string name="cancel_button">Cancel</string>
+    <string name="delete_button">Delete</string>
 
     <!-- Document list -->
     <string name="document_list_empty">No documents yet.</string>
@@ -111,8 +113,30 @@
          the Ubuntu Touch app's own convention (see NextCommon/AboutPage.qml) of never
          translating this section. Do not add these keys to values-*/strings.xml. -->
     <string name="about_title">About</string>
+    <string name="prepare_document_title">Prepare document</string>
+    <string name="prepare_document_received">Received \"%1$s\"</string>
+    <string name="prepare_document_choose_account_prompt">Which account should prepare this document?</string>
+    <string name="prepare_document_account_label">Account: %1$s</string>
+    <string name="signer_search_section_title">Signers</string>
+    <string name="signer_search_label">Search for a signer</string>
+    <string name="signer_remove_content_description">Remove</string>
+    <string name="prepare_document_tap_to_place_hint">Tap the document above to place or move the signature field for %1$s</string>
+    <string name="signer_field_placed_label">Field placed</string>
+    <string name="signer_field_size_label">Size: %1$d%%</string>
+    <string name="prepare_document_submit_button">Send for signing</string>
+    <string name="prepare_document_submitting">Sending…</string>
+    <string name="prepare_document_submit_success_title">Sent</string>
+    <string name="prepare_document_submit_success_message">\"%1$s\" has been sent for signing.</string>
+    <string name="prepare_document_submit_error_title">Could not send document</string>
+    <string name="document_delete_menu_item">Delete sign request</string>
+    <string name="document_delete_confirm_title">Delete sign request?</string>
+    <string name="document_delete_confirm_message">This removes the signing request for \"%1$s\" - the file itself won\'t be deleted. This can\'t be undone.</string>
+    <string name="document_delete_error_dialog_title">Could not delete sign request</string>
+    <string name="prepare_document_guide_title">Prepare a document</string>
+    <string name="prepare_document_guide_message">Open the Nextcloud app, find the PDF you want to prepare, tap \"Send/share\" → \"Send copy to\", then choose NextSign. Not \"Send link\" - that only shares a link, not the file itself.</string>
+    <string name="prepare_document_guide_open_nextcloud_button">Open Nextcloud</string>
     <string name="about_version">Version %1$s</string>
-    <string name="about_description">A native Android client for LibreSign, the electronic signature app for Nextcloud. It does not prepare documents or place signature fields - that happens elsewhere. NextSign shows what is waiting for your signature and signs it with a tap using LibreSign\'s click-to-sign method.</string>
+    <string name="about_description">A native Android client for LibreSign, the electronic signature app for Nextcloud. NextSign shows what is waiting for your signature and signs it with a tap using LibreSign\'s click-to-sign method. You can also prepare a document for signing by sharing a PDF to NextSign from the Nextcloud app.</string>
     <string name="about_license_title" translatable="false">License</string>
     <string name="about_license_text" translatable="false">NextSign is licensed under the MIT License.</string>
     <string name="about_copyright" translatable="false">Copyright (c) 2026 Etherghost</string>
@@ -141,6 +165,9 @@
     <string name="downloaded_file_empty">The downloaded file is empty.</string>
     <string name="libresign_unexpected_response">LibreSign returned an unexpected response.</string>
     <string name="action_libresign_request">LibreSign request</string>
+    <string name="action_search_signers">Searching for signers</string>
+    <string name="action_submit_document">Sending document</string>
+    <string name="action_delete_document">Deleting sign request</string>
     <string name="action_signing">Signing</string>
     <string name="action_validation">Validation</string>
     <string name="action_saving_signature">Saving your signature</string>

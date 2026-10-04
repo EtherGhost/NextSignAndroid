@@ -33,6 +33,15 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Step 1 of document preparation: receive a PDF shared from the
+                 Nextcloud app's own share sheet - see the feasibility doc, "File
+                 source: Nextcloud app only". Scoped to PDF only; this app only ever
+                 prepares PDFs for signing. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/pdf" />
+            </intent-filter>
         </activity>
 
         <!-- Lets a downloaded document be handed to another installed app via a

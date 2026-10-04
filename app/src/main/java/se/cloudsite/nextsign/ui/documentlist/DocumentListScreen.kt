@@ -22,6 +22,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,6 +31,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -69,8 +75,10 @@ fun DocumentListScreen(
     documents: List<LibreSignDocument>,
     loading: Boolean,
     errorMessage: String,
+    currentAccountUserId: String,
     onRefresh: () -> Unit,
-    onDocumentClick: (LibreSignDocument) -> Unit
+    onDocumentClick: (LibreSignDocument) -> Unit,
+    onDeleteDocument: (LibreSignDocument) -> Unit
 ) {
     PullToRefreshBox(
         isRefreshing = loading,
@@ -98,7 +106,17 @@ fun DocumentListScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(documents, key = { it.uuid }) { document ->
-                    DocumentRow(document = document, onClick = { onDocumentClick(document) })
+                    DocumentRow(
+                        document = document,
+                        // Only while nobody has signed yet (status 1) - once any
+                        // signature exists (partially or fully signed), that's real
+                        // data; cancelling instead of deleting isn't offered for those.
+                        canDelete = document.requestedByUserId.isNotEmpty() &&
+                            document.requestedByUserId == currentAccountUserId &&
+                            document.fileStatus == 1,
+                        onClick = { onDocumentClick(document) },
+                        onDelete = { onDeleteDocument(document) }
+                    )
                 }
             }
         }
@@ -106,7 +124,7 @@ fun DocumentListScreen(
 }
 
 @Composable
-private fun DocumentRow(document: LibreSignDocument, onClick: () -> Unit) {
+private fun DocumentRow(document: LibreSignDocument, canDelete: Boolean, onClick: () -> Unit, onDelete: () -> Unit) {
     val color = statusColor(document.fileStatus, document.canSignNow)
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -161,11 +179,25 @@ private fun DocumentRow(document: LibreSignDocument, onClick: () -> Unit) {
                 )
             }
         }
-        IconButton(onClick = onClick) {
-            Icon(
-                Icons.Filled.MoreVert,
-                contentDescription = stringResource(R.string.document_row_menu_content_description)
-            )
+        if (canDelete) {
+            var menuExpanded by remember { mutableStateOf(false) }
+            Box {
+                IconButton(onClick = { menuExpanded = true }) {
+                    Icon(
+                        Icons.Filled.MoreVert,
+                        contentDescription = stringResource(R.string.document_row_menu_content_description)
+                    )
+                }
+                DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.document_delete_menu_item)) },
+                        onClick = {
+                            menuExpanded = false
+                            onDelete()
+                        }
+                    )
+                }
+            }
         }
     }
 }
