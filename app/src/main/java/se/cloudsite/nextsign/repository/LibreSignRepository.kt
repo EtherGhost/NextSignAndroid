@@ -85,6 +85,17 @@ class LibreSignRepository(private val context: Context) {
             }
             val response = api.signDocument(signUuid, SignRequestBody(elements = elements)).execute()
             if (!response.isSuccessful) {
+                // Confirmed live (not guessed): when a LibreSign admin requires a
+                // signature method other than clickToSign for Account signers (Email
+                // token, Certificate with password), signing fails with exactly this
+                // code - both alternatives tested, identical result either way. The SSO
+                // bridge's generic error body (see errorMessage() below) can't reliably
+                // distinguish this from other 422s, but it's the one case common enough
+                // to be worth a specific, honest (not overconfident) message instead of
+                // a raw exception dump.
+                if (response.code() == 422) {
+                    return SignResult.Failure(context.getString(R.string.sign_error_unsupported_method))
+                }
                 return SignResult.Failure(errorMessage(response, R.string.action_signing))
             }
             SignResult.Success

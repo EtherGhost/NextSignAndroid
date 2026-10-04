@@ -68,6 +68,7 @@
     <string name="validation_error_dialog_title">Kunde inte validera dokumentet</string>
     <string name="open_file_error_dialog_title">Kunde inte öppna dokumentet</string>
     <string name="sign_error_no_sign_uuid">Kunde inte fastställa din signaturbegäran för det här dokumentet.</string>
+    <string name="sign_error_unsupported_method">Ditt konto kan kräva en inloggningsmetod (t.ex. en e-postkod eller ett certifikat) som NextSign inte stödjer än. Prova att signera dokumentet via Nextclouds webbgränssnitt istället.</string>
     <string name="open_file_no_app">Ingen installerad app kan öppna det här dokumentet.</string>
 
     <string name="settings_title">Inställningar</string>

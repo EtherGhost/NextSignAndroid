@@ -68,6 +68,7 @@
     <string name="validation_error_dialog_title">Nie udało się zwalidować dokumentu</string>
     <string name="open_file_error_dialog_title">Nie udało się otworzyć dokumentu</string>
     <string name="sign_error_no_sign_uuid">Nie udało się ustalić Twojego żądania podpisu dla tego dokumentu.</string>
+    <string name="sign_error_unsupported_method">Twoje konto może wymagać metody logowania (np. kodu e-mail lub certyfikatu), której NextSign jeszcze nie obsługuje. Spróbuj podpisać ten dokument za pomocą interfejsu internetowego Nextcloud.</string>
     <string name="open_file_no_app">Żadna zainstalowana aplikacja nie może otworzyć tego dokumentu.</string>
 
     <string name="settings_title">Ustawienia</string>

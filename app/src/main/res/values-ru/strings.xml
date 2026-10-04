@@ -68,6 +68,7 @@
     <string name="validation_error_dialog_title">Не удалось проверить документ</string>
     <string name="open_file_error_dialog_title">Не удалось открыть документ</string>
     <string name="sign_error_no_sign_uuid">Не удалось определить ваш запрос на подпись для этого документа.</string>
+    <string name="sign_error_unsupported_method">Для вашей учётной записи может потребоваться способ входа (например, код по электронной почте или сертификат), который NextSign пока не поддерживает. Попробуйте подписать документ через веб-интерфейс Nextcloud.</string>
     <string name="open_file_no_app">Ни одно установленное приложение не может открыть этот документ.</string>
 
     <string name="settings_title">Настройки</string>

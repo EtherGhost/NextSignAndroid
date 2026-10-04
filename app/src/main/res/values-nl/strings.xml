@@ -68,6 +68,7 @@
     <string name="validation_error_dialog_title">Kon document niet valideren</string>
     <string name="open_file_error_dialog_title">Kon document niet openen</string>
     <string name="sign_error_no_sign_uuid">Kon je ondertekeningsverzoek voor dit document niet bepalen.</string>
+    <string name="sign_error_unsupported_method">Je account vereist mogelijk een aanmeldmethode (zoals een e-mailcode of certificaat) die NextSign nog niet ondersteunt. Probeer het document in plaats daarvan te ondertekenen via de webinterface van Nextcloud.</string>
     <string name="open_file_no_app">Geen enkele geïnstalleerde app kan dit document openen.</string>
 
     <string name="settings_title">Instellingen</string>
