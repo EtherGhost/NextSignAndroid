@@ -12,7 +12,7 @@ port of that codebase.
 
 ## Status
 
-Early release, published on Google Play as a closed test. Bugs and rough edges are expected.
+Published on [Google Play](https://play.google.com/store/apps/details?id=se.cloudsite.nextsign).
 What exists so far:
 
 - Nextcloud Single Sign-On authentication via the Nextcloud Files app, with instant switching
@@ -34,29 +34,28 @@ What exists so far:
 - Set up a signature by picking an image or drawing it with a finger or stylus, used
   automatically when a document needs a visible signature.
 - Validates a signed document's signature and shows LibreSign's own verdict for it.
-- Notifications when a document needs your signature, configurable in Settings: off, a periodic
-  background check (needs no extra app), or instant delivery via
+- Notifications when a document needs your signature, configured independently per account: off,
+  a periodic background check (needs no extra app), or instant delivery via
   [UnifiedPush](https://unifiedpush.org/) (needs a small distributor app such as `ntfy`
-  installed).
+  installed). The reminder can be snoozed for a duration you choose, or dismissed until the
+  document is resolved.
 - Available in English, Swedish, German, French, Spanish, Italian, Dutch, Danish, Norwegian
   Bokmål, Polish, and Russian, with an in-app language picker (or follow the device's system
   language automatically).
 
 ## Disclaimer
 
-This is a hobby project, built and maintained in spare time - not an official or supported
-product.
+Built and maintained in spare time, by one person - not an official or supported product.
 
-- **No support is offered, and this is a solo project, not a collaborative one.** Bug reports are
-  welcome, but there's no guaranteed response time and no promise any given one gets fixed. The
-  source is here to be read and forked, not to gather contributors.
-- **Use it at your own risk**, especially anything involving actually signing a document. Verify
-  independently (e.g. in the LibreSign web UI) that a signature was applied correctly before
-  relying on it for anything that matters.
-- **Not affiliated with, endorsed by, or supported by Nextcloud GmbH, the Nextcloud project, or
-  the LibreSign project** in any way.
-- Provided under the MIT license (see [`LICENSE`](LICENSE)): no warranty of any kind, used
-  entirely at your own risk.
+- Bug reports about the app itself are welcome, with no guaranteed response time or fix. No
+  support at all for setting up or troubleshooting your own Nextcloud/LibreSign server - that's
+  outside this project entirely.
+- For anything involving actually signing a document, it's worth independently verifying (e.g. in
+  the LibreSign web UI) that the signature applied correctly before relying on it for anything
+  that matters.
+- Not affiliated with, endorsed by, or supported by Nextcloud GmbH, the Nextcloud project, or the
+  LibreSign project.
+- Provided under the MIT license (see [`LICENSE`](LICENSE)) - no warranty of any kind.
 
 ## Technology
 
