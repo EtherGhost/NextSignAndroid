@@ -21,22 +21,25 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import se.cloudsite.nextsign.R
 
-// There's no in-app document/file picker - preparing a document only starts by
-// sharing a PDF to NextSign from the Nextcloud app itself (see PrepareDocumentScreen
-// and the feasibility doc). This screen exists purely so that entry point is
-// discoverable from the drawer at all, rather than only by accident - it doesn't
-// start a flow itself, just explains the real one and jumps to Nextcloud.
+// Document preparation starts one of two ways: a PDF shared to NextSign from
+// another app (the Nextcloud app, primarily), or a PDF picked directly via the
+// system file picker (see MainActivity.openFileManager/filePickerLauncher).
+// This screen exists purely so both entry points are discoverable from the
+// drawer at all, rather than only by accident.
 //
 // Signing into NextSign at all already requires the Nextcloud app to be
 // installed, but it can be uninstalled afterwards while still signed in (every
 // other screen would already be broken too in that case, not just this one) -
-// so the install fallback is still needed here, not dead code.
+// so the install fallback is still needed here, not dead code. The file picker
+// section has no such fallback - GetContent() is a core Android API, always
+// available, so there's nothing to install.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrepareDocumentGuideScreen(
     nextcloudInstalled: Boolean,
     onOpenNextcloud: () -> Unit,
     onInstallNextcloud: () -> Unit,
+    onOpenFileManager: () -> Unit,
     onBack: () -> Unit
 ) {
     Scaffold(
@@ -53,18 +56,28 @@ fun PrepareDocumentGuideScreen(
     ) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Text(stringResource(R.string.prepare_document_guide_message), style = MaterialTheme.typography.bodyLarge)
-            Button(
-                onClick = if (nextcloudInstalled) onOpenNextcloud else onInstallNextcloud,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    stringResource(
-                        if (nextcloudInstalled) R.string.prepare_document_guide_open_nextcloud_button else R.string.install_nextcloud_button
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(stringResource(R.string.prepare_document_guide_nextcloud_section_title), style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.prepare_document_guide_message), style = MaterialTheme.typography.bodyLarge)
+                Button(
+                    onClick = if (nextcloudInstalled) onOpenNextcloud else onInstallNextcloud,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        stringResource(
+                            if (nextcloudInstalled) R.string.prepare_document_guide_open_nextcloud_button else R.string.install_nextcloud_button
+                        )
                     )
-                )
+                }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(stringResource(R.string.prepare_document_guide_filemanager_section_title), style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.prepare_document_guide_filemanager_message), style = MaterialTheme.typography.bodyLarge)
+                Button(onClick = onOpenFileManager, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.prepare_document_guide_open_filemanager_button))
+                }
             }
         }
     }

@@ -25,6 +25,7 @@
     <string name="sort_newest_first">Nyast först</string>
     <string name="sort_oldest_first">Äldst först</string>
     <string name="sort_name_asc">Namn (A-Ö)</string>
+    <string name="sort_button_content_description">Sortering: %1$s</string>
 
     <string name="account_switcher_title">Växla konto</string>
     <string name="account_switcher_current">Aktuellt</string>
@@ -107,9 +108,13 @@
     <string name="signer_search_section_title">Signerare</string>
     <string name="signer_search_label">Sök efter en signerare</string>
     <string name="signer_remove_content_description">Ta bort</string>
-    <string name="prepare_document_tap_to_place_hint">Tryck på dokumentet ovan för att placera eller flytta signaturfältet för %1$s</string>
+    <string name="prepare_document_tap_to_place_hint">Tryck på dokumentet ovan för att lägga till ett signaturfält för %1$s - dra ett befintligt fält för att flytta det, eller håll nedtryckt för att ta bort det</string>
     <string name="signer_field_placed_label">Fält placerat</string>
+    <string name="signer_fields_placed_label">%1$d fält placerade</string>
     <string name="signer_field_size_label">Storlek: %1$d%%</string>
+    <string name="prepare_document_page_indicator">Sida %1$d av %2$d</string>
+    <string name="prepare_document_previous_page_content_description">Föregående sida</string>
+    <string name="prepare_document_next_page_content_description">Nästa sida</string>
     <string name="prepare_document_submit_button">Skicka för signering</string>
     <string name="prepare_document_submitting">Skickar…</string>
     <string name="prepare_document_submit_success_title">Skickat</string>
@@ -118,10 +123,16 @@
     <string name="document_delete_menu_item">Ta bort signeringsbegäran</string>
     <string name="document_delete_confirm_title">Ta bort signeringsbegäran?</string>
     <string name="document_delete_confirm_message">Det här tar bort signeringsbegäran för \"%1$s\" - själva filen tas inte bort. Det går inte att ångra.</string>
+    <string name="remove_field_confirm_title">Ta bort fältplacering?</string>
+    <string name="remove_field_confirm_message">Det här tar bort just det här signaturfältet för %1$s - eventuella andra fält för personen finns kvar.</string>
     <string name="document_delete_error_dialog_title">Kunde inte ta bort signeringsbegäran</string>
     <string name="prepare_document_guide_title">Förbered dokument</string>
+    <string name="prepare_document_guide_nextcloud_section_title">Från Nextcloud-appen</string>
     <string name="prepare_document_guide_message">Öppna Nextcloud-appen, hitta PDF:en du vill förbereda, tryck på \"Skicka/dela\" → \"Skicka kopia till\" och välj sedan NextSign. Inte \"Skicka länk\" - det delar bara en länk, inte själva filen.</string>
     <string name="prepare_document_guide_open_nextcloud_button">Öppna Nextcloud</string>
+    <string name="prepare_document_guide_filemanager_section_title">Välj en PDF du redan har på enheten</string>
+    <string name="prepare_document_guide_filemanager_message">Tryck på knappen nedan och välj PDF:en du vill förbereda - den öppnas direkt i NextSign, du behöver inte dela den separat.</string>
+    <string name="prepare_document_guide_open_filemanager_button">Välj en PDF</string>
     <string name="about_version">Version %1$s</string>
     <string name="about_description">En native Android-klient för LibreSign, e-signaturappen för Nextcloud. NextSign visar vad som väntar på din signatur och signerar det med ett tryck med LibreSigns click-to-sign-metod. Du kan också förbereda ett dokument för signering genom att dela en PDF till NextSign från Nextcloud-appen.</string>
 

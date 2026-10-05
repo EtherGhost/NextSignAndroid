@@ -28,6 +28,7 @@
     <string name="sort_newest_first">Newest first</string>
     <string name="sort_oldest_first">Oldest first</string>
     <string name="sort_name_asc">Name (A-Z)</string>
+    <string name="sort_button_content_description">Sort: %1$s</string>
 
     <!-- Account switcher -->
     <string name="account_switcher_title">Switch account</string>
@@ -123,9 +124,13 @@
     <string name="signer_search_section_title">Signers</string>
     <string name="signer_search_label">Search for a signer</string>
     <string name="signer_remove_content_description">Remove</string>
-    <string name="prepare_document_tap_to_place_hint">Tap the document above to place or move the signature field for %1$s</string>
+    <string name="prepare_document_tap_to_place_hint">Tap the document above to add a signature field for %1$s - drag an existing field to move it, or long-press to remove it</string>
     <string name="signer_field_placed_label">Field placed</string>
+    <string name="signer_fields_placed_label">%1$d fields placed</string>
     <string name="signer_field_size_label">Size: %1$d%%</string>
+    <string name="prepare_document_page_indicator">Page %1$d of %2$d</string>
+    <string name="prepare_document_previous_page_content_description">Previous page</string>
+    <string name="prepare_document_next_page_content_description">Next page</string>
     <string name="prepare_document_submit_button">Send for signing</string>
     <string name="prepare_document_submitting">Sending…</string>
     <string name="prepare_document_submit_success_title">Sent</string>
@@ -134,10 +139,16 @@
     <string name="document_delete_menu_item">Delete sign request</string>
     <string name="document_delete_confirm_title">Delete sign request?</string>
     <string name="document_delete_confirm_message">This removes the signing request for \"%1$s\" - the file itself won\'t be deleted. This can\'t be undone.</string>
+    <string name="remove_field_confirm_title">Remove field placement?</string>
+    <string name="remove_field_confirm_message">This removes this signature field for %1$s - any other fields placed for them are kept.</string>
     <string name="document_delete_error_dialog_title">Could not delete sign request</string>
     <string name="prepare_document_guide_title">Prepare a document</string>
+    <string name="prepare_document_guide_nextcloud_section_title">From the Nextcloud app</string>
     <string name="prepare_document_guide_message">Open the Nextcloud app, find the PDF you want to prepare, tap \"Send/share\" → \"Send copy to\", then choose NextSign. Not \"Send link\" - that only shares a link, not the file itself.</string>
     <string name="prepare_document_guide_open_nextcloud_button">Open Nextcloud</string>
+    <string name="prepare_document_guide_filemanager_section_title">Pick a PDF already on your device</string>
+    <string name="prepare_document_guide_filemanager_message">Tap the button below and choose the PDF you want to prepare - it opens straight into NextSign, no need to share it separately.</string>
+    <string name="prepare_document_guide_open_filemanager_button">Choose a PDF</string>
     <string name="about_version">Version %1$s</string>
     <string name="about_description">A native Android client for LibreSign, the electronic signature app for Nextcloud. NextSign shows what is waiting for your signature and signs it with a tap using LibreSign\'s click-to-sign method. You can also prepare a document for signing by sharing a PDF to NextSign from the Nextcloud app.</string>
     <string name="about_license_title" translatable="false">License</string>

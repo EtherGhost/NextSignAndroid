@@ -61,6 +61,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -106,6 +107,7 @@ import se.cloudsite.nextsign.util.PdfPreviewRenderer
 import se.cloudsite.nextsign.ui.account.AccountScreen
 import se.cloudsite.nextsign.ui.common.AccountAvatar
 import se.cloudsite.nextsign.ui.documentdetail.DeleteDocumentConfirmDialog
+import se.cloudsite.nextsign.ui.preparedocument.RemoveFieldConfirmDialog
 import se.cloudsite.nextsign.ui.documentdetail.DocumentDetailDialog
 import se.cloudsite.nextsign.ui.documentdetail.MessageDialog
 import se.cloudsite.nextsign.ui.documentdetail.SignConfirmDialog
@@ -184,17 +186,38 @@ class MainActivity : ComponentActivity() {
     private var preparedDocumentPreviewBitmap: Bitmap? by mutableStateOf(null)
     private var preparedDocumentPreviewError: Boolean by mutableStateOf(false)
     private var preparedDocumentPreviewLoading: Boolean by mutableStateOf(false)
+    // 0-indexed, matches PdfFieldPlacement.page/PdfPreviewRenderer. pageCount
+    // starts at 1 so the page indicator has something sane to show before the
+    // first render finishes.
+    private var preparedDocumentPreviewPage: Int by mutableStateOf(0)
+    private var preparedDocumentPageCount: Int by mutableStateOf(1)
     private var signerSearchQuery: String by mutableStateOf("")
     private var signerSearchResults: List<SignerCandidate> by mutableStateOf(emptyList())
     private var signerSearchLoading: Boolean by mutableStateOf(false)
     private var signerSearchErrorMessage: String? by mutableStateOf(null)
     private var selectedSigners: List<SignerCandidate> by mutableStateOf(emptyList())
-    private var placedFields: Map<String, PdfFieldPlacement> by mutableStateOf(emptyMap())
-    // Explicit "which signer does the next document tap/slider act on" - set by
-    // tapping a signer row (see PrepareDocumentScreen). Falls back to the first
-    // signer without a field yet, then the most recently added one, so there's
-    // always a sensible target even before the user taps anything.
+    // A flat list now, not one entry per signer identify - a signer can need
+    // more than one field (e.g. initials on several pages plus a signature on
+    // the last one), confirmed as the actual real-world requirement after the
+    // earlier one-field-per-signer design kept producing "the box just moves
+    // instead of adding a new one" reports that turned out to be the model
+    // itself being wrong, not a bug in it.
+    private var placedFields: List<PdfFieldPlacement> by mutableStateOf(emptyList())
+    private var nextFieldId: Int = 1
+    // Who gets a brand new field when tapping empty space on the page - set by
+    // tapping a signer row (see PrepareDocumentScreen). Deliberately NOT
+    // cleared on page navigation - staying armed across pages is the point
+    // now, e.g. arm someone once and tap every page to place their initials
+    // on each one.
     private var armedSignerIdentify: String? by mutableStateOf(null)
+    // Which specific field the resize slider and long-press-to-remove act on -
+    // set by tapping an existing marker, distinct from armedSignerIdentify
+    // since one signer can now have several fields.
+    private var selectedFieldId: String? by mutableStateOf(null)
+    // Field pending a remove confirmation (long-press on its marker) - removes
+    // just that one field, keeps the signer themselves in selectedSigners and
+    // any other fields they have elsewhere.
+    private var pendingFieldRemovalId: String? by mutableStateOf(null)
     private var isSubmittingDocument: Boolean by mutableStateOf(false)
     private var submitSuccessMessage: String? by mutableStateOf(null)
     private var submitErrorMessage: String? by mutableStateOf(null)
@@ -236,6 +259,18 @@ class MainActivity : ComponentActivity() {
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             handlePickedImage(uri)
+        }
+    }
+
+    // The "Open file manager" guide button (see PrepareDocumentGuideScreen) - a
+    // plain launch-the-files-app Intent (CATEGORY_APP_FILES) has no way to get a
+    // picked file back to this activity at all, so tapping a PDF there just
+    // returned to NextSign with nothing happening (confirmed live). GetContent
+    // is a real picker with a result callback, so it goes straight into the
+    // prepare-document flow - no separate manual "now share it" step needed.
+    private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) {
+            beginPreparingDocument(uri)
         }
     }
 
@@ -553,6 +588,7 @@ class MainActivity : ComponentActivity() {
                                     packageManager.getLaunchIntentForPackage("com.nextcloud.client")?.let { startActivity(it) }
                                 },
                                 onInstallNextcloud = { openPlayStoreListing(this@MainActivity, "com.nextcloud.client") },
+                                onOpenFileManager = { openFileManager() },
                                 onBack = { currentScreen = Screen.DOCUMENT_LIST }
                             )
 
@@ -600,9 +636,7 @@ class MainActivity : ComponentActivity() {
                                 }
                                 val effectiveArmedIdentify = armedSignerIdentify
                                     ?.takeIf { id -> selectedSigners.any { it.identify == id } }
-                                    ?: selectedSigners.firstOrNull { placedFields[it.identify] == null }?.identify
-                                    ?: selectedSigners.lastOrNull()?.identify
-                                val armedField = effectiveArmedIdentify?.let { placedFields[it] }
+                                val selectedField = selectedFieldId?.let { id -> placedFields.firstOrNull { it.id == id } }
 
                                 PrepareDocumentScreen(
                                     documentName = preparedDocumentName,
@@ -611,6 +645,22 @@ class MainActivity : ComponentActivity() {
                                     previewBitmap = preparedDocumentPreviewBitmap,
                                     previewLoading = preparedDocumentPreviewLoading,
                                     previewError = preparedDocumentPreviewError,
+                                    previewPage = preparedDocumentPreviewPage,
+                                    previewPageCount = preparedDocumentPageCount,
+                                    onPreviousPage = {
+                                        val uri = preparedDocumentUri
+                                        if (uri != null && preparedDocumentPreviewPage > 0) {
+                                            preparedDocumentPreviewPage -= 1
+                                            loadPreviewPage(uri, preparedDocumentPreviewPage)
+                                        }
+                                    },
+                                    onNextPage = {
+                                        val uri = preparedDocumentUri
+                                        if (uri != null && preparedDocumentPreviewPage < preparedDocumentPageCount - 1) {
+                                            preparedDocumentPreviewPage += 1
+                                            loadPreviewPage(uri, preparedDocumentPreviewPage)
+                                        }
+                                    },
                                     signerSearchQuery = signerSearchQuery,
                                     onSignerSearchQueryChange = { signerSearchQuery = it },
                                     signerSearchResults = signerSearchResults,
@@ -620,11 +670,11 @@ class MainActivity : ComponentActivity() {
                                     placedFields = placedFields,
                                     armedSignerIdentify = effectiveArmedIdentify,
                                     onArmSigner = { identify -> armedSignerIdentify = identify },
-                                    fieldSizeFactor = armedField?.let { it.width / FIELD_BASE_WIDTH } ?: 1f,
+                                    fieldSizeFactor = selectedField?.let { it.width / FIELD_BASE_WIDTH } ?: 1f,
+                                    hasSelectedFieldOnCurrentPage = selectedField?.page == preparedDocumentPreviewPage,
                                     onFieldSizeFactorChange = { factor ->
-                                        val id = effectiveArmedIdentify
-                                        val old = id?.let { placedFields[it] }
-                                        if (id != null && old != null) {
+                                        val old = selectedField
+                                        if (old != null) {
                                             val centerX = old.left + old.width / 2
                                             val centerY = old.top + old.height / 2
                                             val newWidth = FIELD_BASE_WIDTH * factor
@@ -634,49 +684,77 @@ class MainActivity : ComponentActivity() {
                                             val maxTop = if (bitmap != null) (bitmap.height - newHeight).coerceAtLeast(0f) else centerY
                                             val newLeft = (centerX - newWidth / 2).coerceIn(0f, maxLeft)
                                             val newTop = (centerY - newHeight / 2).coerceIn(0f, maxTop)
-                                            placedFields = placedFields + (id to PdfFieldPlacement(newLeft, newTop, newWidth, newHeight))
+                                            placedFields = placedFields.map {
+                                                if (it.id == old.id) it.copy(left = newLeft, top = newTop, width = newWidth, height = newHeight) else it
+                                            }
                                         }
                                     },
                                     onAddSigner = { candidate ->
                                         if (selectedSigners.none { it.identify == candidate.identify }) {
                                             selectedSigners = selectedSigners + candidate
                                         }
+                                        armedSignerIdentify = candidate.identify
                                         signerSearchQuery = ""
                                         signerSearchResults = emptyList()
                                         signerSearchErrorMessage = null
                                     },
                                     onRemoveSigner = { candidate ->
                                         selectedSigners = selectedSigners.filterNot { it.identify == candidate.identify }
-                                        placedFields = placedFields - candidate.identify
+                                        placedFields = placedFields.filterNot { it.identify == candidate.identify }
                                         if (armedSignerIdentify == candidate.identify) armedSignerIdentify = null
                                     },
                                     onTapPlaceField = { xPt, yPt ->
+                                        // Always adds a brand new field - never moves/overwrites
+                                        // an existing one (see onDragField for that). Tagged with
+                                        // whichever page is currently on screen, so arming someone
+                                        // once and tapping each page in turn places one field per
+                                        // page for them - the actual real-world requirement, found
+                                        // out the hard way after the earlier "one field per signer,
+                                        // tapping just moves it" design kept producing live bug
+                                        // reports that turned out to be the model itself being wrong.
                                         val targetIdentify = effectiveArmedIdentify
                                         if (targetIdentify != null) {
                                             val bitmap = preparedDocumentPreviewBitmap
-                                            val currentField = placedFields[targetIdentify]
-                                            val fieldWidth = currentField?.width ?: FIELD_BASE_WIDTH
-                                            val fieldHeight = currentField?.height ?: FIELD_BASE_HEIGHT
+                                            val fieldWidth = FIELD_BASE_WIDTH
+                                            val fieldHeight = FIELD_BASE_HEIGHT
                                             val maxLeft = if (bitmap != null) (bitmap.width - fieldWidth).coerceAtLeast(0f) else xPt
                                             val maxTop = if (bitmap != null) (bitmap.height - fieldHeight).coerceAtLeast(0f) else yPt
                                             val left = (xPt - fieldWidth / 2).coerceIn(0f, maxLeft)
                                             val top = (yPt - fieldHeight / 2).coerceIn(0f, maxTop)
-                                            placedFields = placedFields + (targetIdentify to PdfFieldPlacement(left = left, top = top, width = fieldWidth, height = fieldHeight))
-                                            armedSignerIdentify = targetIdentify
+                                            val newId = "field_${nextFieldId++}"
+                                            placedFields = placedFields + PdfFieldPlacement(
+                                                id = newId,
+                                                identify = targetIdentify,
+                                                left = left,
+                                                top = top,
+                                                width = fieldWidth,
+                                                height = fieldHeight,
+                                                page = preparedDocumentPreviewPage
+                                            )
+                                            selectedFieldId = newId
                                         }
                                     },
-                                    onDragField = { identify, dxPt, dyPt ->
-                                        val old = placedFields[identify]
+                                    onFieldTap = { fieldId ->
+                                        val field = placedFields.firstOrNull { it.id == fieldId }
+                                        if (field != null) {
+                                            armedSignerIdentify = field.identify
+                                            selectedFieldId = fieldId
+                                        }
+                                    },
+                                    onDragField = { fieldId, dxPt, dyPt ->
+                                        val old = placedFields.firstOrNull { it.id == fieldId }
                                         if (old != null) {
                                             val bitmap = preparedDocumentPreviewBitmap
                                             val maxLeft = if (bitmap != null) (bitmap.width - old.width).coerceAtLeast(0f) else Float.MAX_VALUE
                                             val maxTop = if (bitmap != null) (bitmap.height - old.height).coerceAtLeast(0f) else Float.MAX_VALUE
                                             val newLeft = (old.left + dxPt).coerceIn(0f, maxLeft)
                                             val newTop = (old.top + dyPt).coerceIn(0f, maxTop)
-                                            placedFields = placedFields + (identify to old.copy(left = newLeft, top = newTop))
-                                            armedSignerIdentify = identify
+                                            placedFields = placedFields.map {
+                                                if (it.id == fieldId) it.copy(left = newLeft, top = newTop) else it
+                                            }
                                         }
                                     },
+                                    onFieldLongPress = { fieldId -> pendingFieldRemovalId = fieldId },
                                     isSubmitting = isSubmittingDocument,
                                     onSubmit = { submitPreparedDocument() },
                                     onSelectAccount = { name -> preparedDocumentAccountName = name },
@@ -686,15 +764,42 @@ class MainActivity : ComponentActivity() {
                                         preparedDocumentAccountName = null
                                         preparedDocumentPreviewBitmap = null
                                         preparedDocumentPreviewError = false
+                                        preparedDocumentPreviewPage = 0
+                                        preparedDocumentPageCount = 1
                                         signerSearchQuery = ""
                                         signerSearchResults = emptyList()
                                         signerSearchErrorMessage = null
                                         selectedSigners = emptyList()
-                                        placedFields = emptyMap()
+                                        placedFields = emptyList()
+                                        nextFieldId = 1
                                         armedSignerIdentify = null
+                                        selectedFieldId = null
                                         currentScreen = Screen.DOCUMENT_LIST
                                     }
                                 )
+
+                                pendingFieldRemovalId?.let { fieldId ->
+                                    val field = placedFields.firstOrNull { it.id == fieldId }
+                                    val signerName = field?.let { f -> selectedSigners.firstOrNull { it.identify == f.identify }?.displayName }.orEmpty()
+                                    RemoveFieldConfirmDialog(
+                                        signerName = signerName,
+                                        onConfirm = {
+                                            placedFields = placedFields.filterNot { it.id == fieldId }
+                                            if (selectedFieldId == fieldId) selectedFieldId = null
+                                            // Arms the signer whose field was just removed -
+                                            // without this, whoever was armed before (if
+                                            // anyone) stays armed and the just-cleared signer
+                                            // is never offered for placement again until the
+                                            // user explicitly taps their row, which read as
+                                            // "the send button stays disabled forever" since
+                                            // nothing made it obvious how to place their field
+                                            // again.
+                                            if (field != null) armedSignerIdentify = field.identify
+                                            pendingFieldRemovalId = null
+                                        },
+                                        onDismiss = { pendingFieldRemovalId = null }
+                                    )
+                                }
                             }
 
                             Screen.ACCOUNT -> AccountScreen(
@@ -944,10 +1049,20 @@ class MainActivity : ComponentActivity() {
             fromExtra ?: intent.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.uri
         }
         if (uri == null) return false
+        beginPreparingDocument(uri)
+        return true
+    }
+
+    // Shared by handleShareIntent (a PDF shared in from another app) and
+    // filePickerLauncher (a PDF picked directly via the system file picker,
+    // see openFileManager) - both just want "start the prepare-document flow
+    // for this file".
+    private fun beginPreparingDocument(uri: Uri) {
         preparedDocumentUri = uri
         preparedDocumentName = queryDisplayName(uri)
-        // The share carries no account info - default straight through when only
-        // one account is known, otherwise make the user pick (see PrepareDocumentScreen).
+        // Neither a share nor a picked file carries account info - default
+        // straight through when only one account is known, otherwise make the
+        // user pick (see PrepareDocumentScreen).
         val knownAccounts = AccountHistory.list(this)
         preparedDocumentAccountName = if (knownAccounts.size <= 1) {
             knownAccounts.firstOrNull() ?: account?.name
@@ -955,21 +1070,32 @@ class MainActivity : ComponentActivity() {
             null
         }
         currentScreen = Screen.PREPARE_DOCUMENT
+        preparedDocumentPreviewPage = 0
+        preparedDocumentPageCount = 1
+        loadPreviewPage(uri, 0)
+    }
+
+    // Shared by the initial share-receive and the prev/next page buttons in
+    // PrepareDocumentScreen - both just want "render this page of this document
+    // and update the preview state when it lands".
+    private fun loadPreviewPage(uri: Uri, pageIndex: Int) {
         preparedDocumentPreviewBitmap = null
         preparedDocumentPreviewError = false
         preparedDocumentPreviewLoading = true
         lifecycleScope.launch {
-            val bitmap = withContext(Dispatchers.IO) { PdfPreviewRenderer.renderFirstPage(this@MainActivity, uri) }
-            // Guards against a share received while an older one's render was still
-            // in flight (e.g. back-out-then-reshare) landing after the newer one and
-            // silently swapping in the wrong page - same pattern as refresh()'s
-            // account guard elsewhere in this file.
-            if (uri != preparedDocumentUri) return@launch
-            preparedDocumentPreviewBitmap = bitmap
-            preparedDocumentPreviewError = bitmap == null
+            val result = withContext(Dispatchers.IO) { PdfPreviewRenderer.renderPage(this@MainActivity, uri, pageIndex) }
+            // Guards against a share received (or a page turned) while an older
+            // render was still in flight landing after the newer one and silently
+            // swapping in the wrong page - same pattern as refresh()'s account
+            // guard elsewhere in this file.
+            if (uri != preparedDocumentUri || pageIndex != preparedDocumentPreviewPage) return@launch
+            preparedDocumentPreviewBitmap = result?.bitmap
+            preparedDocumentPreviewError = result == null
             preparedDocumentPreviewLoading = false
+            if (result != null) {
+                preparedDocumentPageCount = result.pageCount
+            }
         }
-        return true
     }
 
     private fun queryDisplayName(uri: Uri): String {
@@ -980,6 +1106,21 @@ class MainActivity : ComponentActivity() {
             }
         }
         return ""
+    }
+
+    // Originally tried CATEGORY_APP_FILES (launch "the" file manager app without
+    // guessing an OEM-specific package name) with a plain ACTION_GET_CONTENT
+    // fallback fired via startActivity(). Both are dead ends for this button's
+    // actual purpose: CATEGORY_APP_FILES just opens an app, with no way to get a
+    // picked file back to NextSign at all, and a fire-and-forget
+    // ACTION_GET_CONTENT has nowhere for its result to land either - tapping a
+    // PDF just returned to NextSign with nothing happening (confirmed live).
+    // filePickerLauncher (GetContent, registered above with a real result
+    // callback) fixes both: a real system picker, scoped to PDFs, that feeds
+    // the chosen file straight into the prepare-document flow - no separate
+    // manual "now share it" step needed either.
+    private fun openFileManager() {
+        filePickerLauncher.launch("application/pdf")
     }
 
     private fun submitPreparedDocument() {
@@ -1020,12 +1161,16 @@ class MainActivity : ComponentActivity() {
                     preparedDocumentAccountName = null
                     preparedDocumentPreviewBitmap = null
                     preparedDocumentPreviewError = false
+                    preparedDocumentPreviewPage = 0
+                    preparedDocumentPageCount = 1
                     signerSearchQuery = ""
                     signerSearchResults = emptyList()
                     signerSearchErrorMessage = null
                     selectedSigners = emptyList()
-                    placedFields = emptyMap()
+                    placedFields = emptyList()
+                    nextFieldId = 1
                     armedSignerIdentify = null
+                    selectedFieldId = null
                     currentScreen = Screen.DOCUMENT_LIST
                     // Only refresh the visible list if the document was prepared under
                     // the app's currently active account - otherwise this would yank
@@ -1380,8 +1525,11 @@ private fun buildSignatureElementsByType(elements: List<SignatureElement>): Map<
 private fun SortMenuButton(sortMode: SortMode, onSortModeSelected: (SortMode) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Box {
-        TextButton(onClick = { expanded = true }) {
-            Text(sortMode.label())
+        IconButton(onClick = { expanded = true }) {
+            Icon(
+                painterResource(R.drawable.ic_sort),
+                contentDescription = stringResource(R.string.sort_button_content_description, sortMode.label())
+            )
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             SortMode.entries.forEach { mode ->

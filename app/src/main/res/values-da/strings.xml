@@ -25,6 +25,7 @@
     <string name="sort_newest_first">Nyeste først</string>
     <string name="sort_oldest_first">Ældste først</string>
     <string name="sort_name_asc">Navn (A-Å)</string>
+    <string name="sort_button_content_description">Sortering: %1$s</string>
 
     <string name="account_switcher_title">Skift konto</string>
     <string name="account_switcher_current">Nuværende</string>
@@ -107,9 +108,13 @@
     <string name="signer_search_section_title">Underskrivere</string>
     <string name="signer_search_label">Søg efter en underskriver</string>
     <string name="signer_remove_content_description">Fjern</string>
-    <string name="prepare_document_tap_to_place_hint">Tryk på dokumentet ovenfor for at placere eller flytte signaturfeltet til %1$s</string>
+    <string name="prepare_document_tap_to_place_hint">Tryk på dokumentet ovenfor for at tilføje et signaturfelt til %1$s - træk et eksisterende felt for at flytte det, eller tryk og hold for at fjerne det</string>
     <string name="signer_field_placed_label">Felt placeret</string>
+    <string name="signer_fields_placed_label">%1$d felter placeret</string>
     <string name="signer_field_size_label">Størrelse: %1$d%%</string>
+    <string name="prepare_document_page_indicator">Side %1$d af %2$d</string>
+    <string name="prepare_document_previous_page_content_description">Forrige side</string>
+    <string name="prepare_document_next_page_content_description">Næste side</string>
     <string name="prepare_document_submit_button">Send til underskrift</string>
     <string name="prepare_document_submitting">Sender…</string>
     <string name="prepare_document_submit_success_title">Sendt</string>
@@ -118,10 +123,16 @@
     <string name="document_delete_menu_item">Slet underskriftsanmodning</string>
     <string name="document_delete_confirm_title">Slette underskriftsanmodningen?</string>
     <string name="document_delete_confirm_message">Dette fjerner underskriftsanmodningen for \"%1$s\" - selve filen slettes ikke. Dette kan ikke fortrydes.</string>
+    <string name="remove_field_confirm_title">Fjern feltplacering?</string>
+    <string name="remove_field_confirm_message">Dette fjerner kun dette signaturfelt for %1$s - eventuelle andre felter for personen bevares.</string>
     <string name="document_delete_error_dialog_title">Kunne ikke slette underskriftsanmodningen</string>
     <string name="prepare_document_guide_title">Forbered dokument</string>
+    <string name="prepare_document_guide_nextcloud_section_title">Fra Nextcloud-appen</string>
     <string name="prepare_document_guide_message">Åbn Nextcloud-appen, find den PDF, du vil forberede, tryk på \"Send/del\" → \"Send kopi til\", og vælg derefter NextSign. Ikke \"Send link\" - det deler kun et link, ikke selve filen.</string>
     <string name="prepare_document_guide_open_nextcloud_button">Åbn Nextcloud</string>
+    <string name="prepare_document_guide_filemanager_section_title">Vælg en PDF, du allerede har på enheden</string>
+    <string name="prepare_document_guide_filemanager_message">Tryk på knappen nedenfor, og vælg den PDF, du vil forberede - den åbnes direkte i NextSign, uden at du behøver at dele den separat.</string>
+    <string name="prepare_document_guide_open_filemanager_button">Vælg en PDF</string>
     <string name="about_version">Version %1$s</string>
     <string name="about_description">En native Android-klient til LibreSign, den elektroniske underskriftsapp til Nextcloud. NextSign viser, hvad der venter på din underskrift, og underskriver det med et tryk via LibreSigns click-to-sign-metode. Du kan også forberede et dokument til underskrift ved at dele en PDF til NextSign fra Nextcloud-appen.</string>
 

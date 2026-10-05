@@ -25,6 +25,7 @@
     <string name="sort_newest_first">Nieuwste eerst</string>
     <string name="sort_oldest_first">Oudste eerst</string>
     <string name="sort_name_asc">Naam (A-Z)</string>
+    <string name="sort_button_content_description">Sorteren: %1$s</string>
 
     <string name="account_switcher_title">Account wisselen</string>
     <string name="account_switcher_current">Huidig</string>
@@ -107,9 +108,13 @@
     <string name="signer_search_section_title">Ondertekenaars</string>
     <string name="signer_search_label">Zoek een ondertekenaar</string>
     <string name="signer_remove_content_description">Verwijderen</string>
-    <string name="prepare_document_tap_to_place_hint">Tik op het document hierboven om het handtekeningveld van %1$s te plaatsen of te verplaatsen</string>
+    <string name="prepare_document_tap_to_place_hint">Tik op het document hierboven om een handtekeningveld toe te voegen voor %1$s - sleep een bestaand veld om het te verplaatsen, of houd ingedrukt om het te verwijderen</string>
     <string name="signer_field_placed_label">Veld geplaatst</string>
+    <string name="signer_fields_placed_label">%1$d velden geplaatst</string>
     <string name="signer_field_size_label">Grootte: %1$d%%</string>
+    <string name="prepare_document_page_indicator">Pagina %1$d van %2$d</string>
+    <string name="prepare_document_previous_page_content_description">Vorige pagina</string>
+    <string name="prepare_document_next_page_content_description">Volgende pagina</string>
     <string name="prepare_document_submit_button">Verzenden voor ondertekening</string>
     <string name="prepare_document_submitting">Verzenden…</string>
     <string name="prepare_document_submit_success_title">Verzonden</string>
@@ -118,10 +123,16 @@
     <string name="document_delete_menu_item">Ondertekeningsverzoek verwijderen</string>
     <string name="document_delete_confirm_title">Ondertekeningsverzoek verwijderen?</string>
     <string name="document_delete_confirm_message">Dit verwijdert het ondertekeningsverzoek voor \"%1$s\" - het bestand zelf wordt niet verwijderd. Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="remove_field_confirm_title">Veldplaatsing verwijderen?</string>
+    <string name="remove_field_confirm_message">Dit verwijdert alleen dit handtekeningveld voor %1$s - eventuele andere velden voor deze persoon blijven behouden.</string>
     <string name="document_delete_error_dialog_title">Kon het ondertekeningsverzoek niet verwijderen</string>
     <string name="prepare_document_guide_title">Document voorbereiden</string>
+    <string name="prepare_document_guide_nextcloud_section_title">Vanuit de Nextcloud-app</string>
     <string name="prepare_document_guide_message">Open de Nextcloud-app, zoek de PDF die je wilt voorbereiden, tik op \"Versturen/delen\" → \"Stuur kopie naar\" en kies dan NextSign. Niet \"Verstuur link\" - dat deelt alleen een link, niet het bestand zelf.</string>
     <string name="prepare_document_guide_open_nextcloud_button">Nextcloud openen</string>
+    <string name="prepare_document_guide_filemanager_section_title">Kies een PDF die al op je toestel staat</string>
+    <string name="prepare_document_guide_filemanager_message">Tik op de knop hieronder en kies de PDF die je wilt voorbereiden - deze opent direct in NextSign, je hoeft hem niet apart te delen.</string>
+    <string name="prepare_document_guide_open_filemanager_button">Kies een PDF</string>
     <string name="about_version">Versie %1$s</string>
     <string name="about_description">Een native Android-client voor LibreSign, de elektronische handtekening-app voor Nextcloud. NextSign toont wat op je handtekening wacht en ondertekent het met een tik via LibreSigns click-to-sign-methode. Je kunt ook een document voorbereiden voor ondertekening door een PDF vanuit de Nextcloud-app naar NextSign te delen.</string>
 

@@ -25,6 +25,7 @@
     <string name="sort_newest_first">Plus récents d\'abord</string>
     <string name="sort_oldest_first">Plus anciens d\'abord</string>
     <string name="sort_name_asc">Nom (A-Z)</string>
+    <string name="sort_button_content_description">Trier : %1$s</string>
 
     <string name="account_switcher_title">Changer de compte</string>
     <string name="account_switcher_current">Actuel</string>
@@ -107,9 +108,13 @@
     <string name="signer_search_section_title">Signataires</string>
     <string name="signer_search_label">Rechercher un signataire</string>
     <string name="signer_remove_content_description">Supprimer</string>
-    <string name="prepare_document_tap_to_place_hint">Appuyez sur le document ci-dessus pour placer ou déplacer le champ de signature de %1$s</string>
+    <string name="prepare_document_tap_to_place_hint">Appuyez sur le document ci-dessus pour ajouter un champ de signature pour %1$s - faites glisser un champ existant pour le déplacer, ou appuyez longuement pour le supprimer</string>
     <string name="signer_field_placed_label">Champ placé</string>
+    <string name="signer_fields_placed_label">%1$d champs placés</string>
     <string name="signer_field_size_label">Taille : %1$d%%</string>
+    <string name="prepare_document_page_indicator">Page %1$d sur %2$d</string>
+    <string name="prepare_document_previous_page_content_description">Page précédente</string>
+    <string name="prepare_document_next_page_content_description">Page suivante</string>
     <string name="prepare_document_submit_button">Envoyer pour signature</string>
     <string name="prepare_document_submitting">Envoi…</string>
     <string name="prepare_document_submit_success_title">Envoyé</string>
@@ -118,10 +123,16 @@
     <string name="document_delete_menu_item">Supprimer la demande de signature</string>
     <string name="document_delete_confirm_title">Supprimer la demande de signature ?</string>
     <string name="document_delete_confirm_message">Cela supprime la demande de signature pour \"%1$s\" - le fichier lui-même ne sera pas supprimé. Cette action est irréversible.</string>
+    <string name="remove_field_confirm_title">Supprimer le placement du champ ?</string>
+    <string name="remove_field_confirm_message">Cela supprime uniquement ce champ de signature pour %1$s - les autres champs placés pour cette personne sont conservés.</string>
     <string name="document_delete_error_dialog_title">Impossible de supprimer la demande de signature</string>
     <string name="prepare_document_guide_title">Préparer un document</string>
+    <string name="prepare_document_guide_nextcloud_section_title">Depuis l\'application Nextcloud</string>
     <string name="prepare_document_guide_message">Ouvrez l\'application Nextcloud, trouvez le PDF à préparer, appuyez sur \"Envoyer / Partager\" → \"Envoyer une copie à\", puis choisissez NextSign. Pas \"Envoyer le lien\" - cela ne partage qu\'un lien, pas le fichier lui-même.</string>
     <string name="prepare_document_guide_open_nextcloud_button">Ouvrir Nextcloud</string>
+    <string name="prepare_document_guide_filemanager_section_title">Choisissez un PDF déjà présent sur votre appareil</string>
+    <string name="prepare_document_guide_filemanager_message">Appuyez sur le bouton ci-dessous et choisissez le PDF à préparer - il s\'ouvre directement dans NextSign, sans avoir besoin de le partager séparément.</string>
+    <string name="prepare_document_guide_open_filemanager_button">Choisir un PDF</string>
     <string name="about_version">Version %1$s</string>
     <string name="about_description">Un client Android natif pour LibreSign, l\'application de signature électronique pour Nextcloud. NextSign affiche ce qui attend votre signature et le signe d\'un geste grâce à la méthode click-to-sign de LibreSign. Vous pouvez aussi préparer un document à signer en le partageant vers NextSign depuis l\'application Nextcloud.</string>
 

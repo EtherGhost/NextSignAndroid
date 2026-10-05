@@ -272,15 +272,17 @@ class LibreSignRepository(private val context: Context) {
     }
 
     // Creates the sign request (uploading the file in the same call) and then places
-    // one file-element per signer that has a field. The returned signers[] order does
-    // NOT match submission order - verified live with two signers - so each one is
-    // matched back by its own identifyMethods[0].value, not by array position.
+    // one file-element per field (a signer can have more than one - initials on
+    // several pages plus a signature on the last one, say). The returned signers[]
+    // order does NOT match submission order - verified live with two signers - so
+    // each one is matched back by its own identifyMethods[0].value, not by array
+    // position.
     fun submitPreparedDocument(
         account: SingleSignOnAccount,
         fileName: String,
         base64: String,
         signers: List<SignerCandidate>,
-        fieldsByIdentify: Map<String, PdfFieldPlacement>
+        fields: List<PdfFieldPlacement>
     ): SubmitPreparedDocumentResult {
         return try {
             val api = ApiProvider.getLibreSignApi(context, account)
@@ -307,7 +309,8 @@ class LibreSignRepository(private val context: Context) {
             val returnedSigners = data.signers.orEmpty()
 
             for (signer in signers) {
-                val field = fieldsByIdentify[signer.identify] ?: continue
+                val signerFields = fields.filter { it.identify == signer.identify }
+                if (signerFields.isEmpty()) continue
                 // .firstOrNull()?.value, not .any { } over the whole list - matches the
                 // confirmed contract (one identifyMethod per returned signer in the live
                 // spike); scanning every entry risked attaching a field to the wrong
@@ -323,21 +326,26 @@ class LibreSignRepository(private val context: Context) {
                     api.deleteFile(fileId).execute()
                     return SubmitPreparedDocumentResult.Failure(context.getString(R.string.libresign_unexpected_response))
                 }
-                val elementBody = CreateFileElementBody(
-                    signRequestId = signRequestId,
-                    fileId = fileId,
-                    coordinates = FileElementCoordinates(
-                        page = 1,
-                        left = field.left.roundToInt(),
-                        top = field.top.roundToInt(),
-                        width = field.width.roundToInt(),
-                        height = field.height.roundToInt()
+                for (field in signerFields) {
+                    val elementBody = CreateFileElementBody(
+                        signRequestId = signRequestId,
+                        fileId = fileId,
+                        coordinates = FileElementCoordinates(
+                            // field.page is 0-indexed (matches PdfRenderer) - LibreSign's own
+                            // "page" is 1-indexed, confirmed by the earlier page-1-only spike
+                            // that used a literal 1 here.
+                            page = field.page + 1,
+                            left = field.left.roundToInt(),
+                            top = field.top.roundToInt(),
+                            width = field.width.roundToInt(),
+                            height = field.height.roundToInt()
+                        )
                     )
-                )
-                val elementResponse = api.createFileElement(fileUuid, elementBody).execute()
-                if (!elementResponse.isSuccessful) {
-                    api.deleteFile(fileId).execute()
-                    return SubmitPreparedDocumentResult.Failure(errorMessage(elementResponse, R.string.action_submit_document))
+                    val elementResponse = api.createFileElement(fileUuid, elementBody).execute()
+                    if (!elementResponse.isSuccessful) {
+                        api.deleteFile(fileId).execute()
+                        return SubmitPreparedDocumentResult.Failure(errorMessage(elementResponse, R.string.action_submit_document))
+                    }
                 }
             }
             SubmitPreparedDocumentResult.Success

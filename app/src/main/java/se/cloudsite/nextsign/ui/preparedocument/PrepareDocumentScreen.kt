@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -37,13 +38,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -66,21 +71,28 @@ fun PrepareDocumentScreen(
     previewBitmap: Bitmap?,
     previewLoading: Boolean,
     previewError: Boolean,
+    previewPage: Int,
+    previewPageCount: Int,
+    onPreviousPage: () -> Unit,
+    onNextPage: () -> Unit,
     signerSearchQuery: String,
     onSignerSearchQueryChange: (String) -> Unit,
     signerSearchResults: List<SignerCandidate>,
     signerSearchLoading: Boolean,
     signerSearchErrorMessage: String?,
     selectedSigners: List<SignerCandidate>,
-    placedFields: Map<String, PdfFieldPlacement>,
+    placedFields: List<PdfFieldPlacement>,
     armedSignerIdentify: String?,
     onArmSigner: (String) -> Unit,
     fieldSizeFactor: Float,
+    hasSelectedFieldOnCurrentPage: Boolean,
     onFieldSizeFactorChange: (Float) -> Unit,
     onAddSigner: (SignerCandidate) -> Unit,
     onRemoveSigner: (SignerCandidate) -> Unit,
     onTapPlaceField: (xPt: Float, yPt: Float) -> Unit,
-    onDragField: (identify: String, dxPt: Float, dyPt: Float) -> Unit,
+    onFieldTap: (fieldId: String) -> Unit,
+    onDragField: (fieldId: String, dxPt: Float, dyPt: Float) -> Unit,
+    onFieldLongPress: (fieldId: String) -> Unit,
     isSubmitting: Boolean,
     onSubmit: () -> Unit,
     onSelectAccount: (String) -> Unit,
@@ -120,6 +132,12 @@ fun PrepareDocumentScreen(
             }
         } else {
             val armedSigner = selectedSigners.firstOrNull { it.identify == armedSignerIdentify }
+            // Tapping a search result moves focus off the text field and
+            // usually dismisses the keyboard - re-requesting focus and showing
+            // the keyboard again lets the user start the next search right
+            // away, without tapping the field a second time.
+            val searchFieldFocusRequester = remember { FocusRequester() }
+            val keyboardController = LocalSoftwareKeyboardController.current
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp)
@@ -148,14 +166,36 @@ fun PrepareDocumentScreen(
                             modifier = Modifier.padding(top = 16.dp)
                         )
                     } else if (previewBitmap != null) {
+                        if (previewPageCount > 1) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                IconButton(onClick = onPreviousPage, enabled = previewPage > 0) {
+                                    Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.prepare_document_previous_page_content_description))
+                                }
+                                Text(
+                                    stringResource(R.string.prepare_document_page_indicator, previewPage + 1, previewPageCount),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                IconButton(onClick = onNextPage, enabled = previewPage < previewPageCount - 1) {
+                                    Icon(Icons.Filled.ArrowForward, contentDescription = stringResource(R.string.prepare_document_next_page_content_description))
+                                }
+                            }
+                        }
                         PdfPreviewWithPlacement(
                             bitmap = previewBitmap,
-                            placedFields = placedFields,
+                            // Markers are only drawn/interactive for fields on the page
+                            // currently shown - fields on other pages stay in
+                            // placedFields untouched, they just aren't visible here.
+                            placedFields = placedFields.filter { it.page == previewPage },
                             signerNames = selectedSigners.associate { it.identify to it.displayName },
                             onTap = onTapPlaceField,
                             onDragField = onDragField,
-                            onFieldTap = onArmSigner,
-                            modifier = Modifier.padding(top = 16.dp)
+                            onFieldTap = onFieldTap,
+                            onFieldLongPress = onFieldLongPress,
+                            modifier = Modifier.padding(top = if (previewPageCount > 1) 8.dp else 16.dp)
                         )
                         if (armedSigner != null) {
                             Text(
@@ -164,7 +204,11 @@ fun PrepareDocumentScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(top = 4.dp)
                             )
-                            if (placedFields.containsKey(armedSigner.identify)) {
+                            // Gated on the selected field actually being on the page
+                            // shown right now - otherwise this slider would float above
+                            // a field the user can't even see, which reads as the app
+                            // being broken.
+                            if (hasSelectedFieldOnCurrentPage) {
                                 Column(modifier = Modifier.padding(top = 4.dp)) {
                                     Text(
                                         stringResource(R.string.signer_field_size_label, (fieldSizeFactor * 100).toInt()),
@@ -201,9 +245,15 @@ fun PrepareDocumentScreen(
                     ) {
                         Column {
                             Text(signer.displayName, style = MaterialTheme.typography.bodyLarge)
+                            val fieldCount = placedFields.count { it.identify == signer.identify }
+                            val fieldLabel = when {
+                                fieldCount == 1 -> stringResource(R.string.signer_field_placed_label)
+                                fieldCount > 1 -> stringResource(R.string.signer_fields_placed_label, fieldCount)
+                                else -> null
+                            }
                             val detail = listOfNotNull(
                                 signer.subname.takeIf { it.isNotEmpty() },
-                                if (placedFields.containsKey(signer.identify)) stringResource(R.string.signer_field_placed_label) else null
+                                fieldLabel
                             ).joinToString(" · ")
                             if (detail.isNotEmpty()) {
                                 Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -220,7 +270,7 @@ fun PrepareDocumentScreen(
                         value = signerSearchQuery,
                         onValueChange = onSignerSearchQueryChange,
                         label = { Text(stringResource(R.string.signer_search_label)) },
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp).focusRequester(searchFieldFocusRequester)
                     )
                     if (signerSearchLoading) {
                         CircularProgressIndicator(modifier = Modifier.padding(top = 8.dp))
@@ -238,7 +288,11 @@ fun PrepareDocumentScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onAddSigner(candidate) }
+                            .clickable {
+                                onAddSigner(candidate)
+                                searchFieldFocusRequester.requestFocus()
+                                keyboardController?.show()
+                            }
                             .padding(vertical = 8.dp)
                     ) {
                         Text(candidate.displayName, style = MaterialTheme.typography.bodyLarge)
@@ -250,7 +304,7 @@ fun PrepareDocumentScreen(
 
                 item {
                     val canSubmit = selectedSigners.isNotEmpty() &&
-                        selectedSigners.all { placedFields.containsKey(it.identify) } &&
+                        selectedSigners.all { s -> placedFields.any { it.identify == s.identify } } &&
                         !isSubmitting
                     Button(
                         onClick = onSubmit,
@@ -276,11 +330,12 @@ fun PrepareDocumentScreen(
 @Composable
 private fun PdfPreviewWithPlacement(
     bitmap: Bitmap,
-    placedFields: Map<String, PdfFieldPlacement>,
+    placedFields: List<PdfFieldPlacement>,
     signerNames: Map<String, String>,
     onTap: (xPt: Float, yPt: Float) -> Unit,
-    onDragField: (identify: String, dxPt: Float, dyPt: Float) -> Unit,
-    onFieldTap: (identify: String) -> Unit,
+    onDragField: (fieldId: String, dxPt: Float, dyPt: Float) -> Unit,
+    onFieldTap: (fieldId: String) -> Unit,
+    onFieldLongPress: (fieldId: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
@@ -309,31 +364,36 @@ private fun PdfPreviewWithPlacement(
             contentScale = ContentScale.FillBounds
         )
 
-        placedFields.forEach { (identify, field) ->
+        placedFields.forEach { field ->
+            val fieldId = field.id
             val leftDp = with(density) { (field.left / scale).toDp() }
             val topDp = with(density) { (field.top / scale).toDp() }
             val widthDp = with(density) { (field.width / scale).toDp() }
             val heightDp = with(density) { (field.height / scale).toDp() }
             val currentOnDrag by rememberUpdatedState(onDragField)
             val currentOnFieldTap by rememberUpdatedState(onFieldTap)
+            val currentOnFieldLongPress by rememberUpdatedState(onFieldLongPress)
             Box(
                 modifier = Modifier
                     .offset(x = leftDp, y = topDp)
                     .size(widthDp, heightDp)
                     .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f))
                     .border(BorderStroke(2.dp, MaterialTheme.colorScheme.primary))
-                    .pointerInput(identify, scale) {
-                        detectTapGestures { currentOnFieldTap(identify) }
+                    .pointerInput(fieldId, scale) {
+                        detectTapGestures(
+                            onTap = { currentOnFieldTap(fieldId) },
+                            onLongPress = { currentOnFieldLongPress(fieldId) }
+                        )
                     }
-                    .pointerInput(identify, scale) {
+                    .pointerInput(fieldId, scale) {
                         detectDragGestures { change, dragAmount ->
                             change.consume()
-                            currentOnDrag(identify, dragAmount.x * scale, dragAmount.y * scale)
+                            currentOnDrag(fieldId, dragAmount.x * scale, dragAmount.y * scale)
                         }
                     }
             ) {
                 Text(
-                    signerNames[identify] ?: identify,
+                    signerNames[field.identify] ?: field.identify,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     maxLines = 1,
