@@ -1,10 +1,10 @@
 # NextSign
 
-NextSign is a native Android client for LibreSign, the electronic signature app for Nextcloud. It
-does not prepare documents or place signature fields - that happens elsewhere (the LibreSign web
-UI, or whoever sent you the request). NextSign's job is to show you what is waiting for your
-signature and let you sign it with a tap, primarily through LibreSign's `clickToSign` method (no
-password or code needed). There is deliberately no password-based signing fallback.
+NextSign is a native Android client for LibreSign, the electronic signature app for Nextcloud. Sign
+documents waiting for you with a tap, primarily through LibreSign's `clickToSign` method (no
+password or code needed - there is deliberately no password-based signing fallback). You can also
+prepare a document yourself: share a PDF in from another app, pick who needs to sign, and place
+their signature fields.
 
 This is the Android counterpart to the [Ubuntu Touch NextSign app](https://github.com/EtherGhost/NextSign)
 - a separate, independent app (different UI toolkit, different account/auth mechanism), not a
@@ -34,6 +34,11 @@ What exists so far:
 - Set up a signature by picking an image or drawing it with a finger or stylus, used
   automatically when a document needs a visible signature.
 - Validates a signed document's signature and shows LibreSign's own verdict for it.
+- Prepare a document for signing: share a PDF in from another app, or pick one directly from
+  NextSign, preview it, search for and select signers, then place as many signature fields as
+  needed per signer across any page. Choose which account should prepare it, if more than one is
+  set up. Delete a sign request you created, before anyone has signed.
+- A filter to show only documents that need your attention.
 - Notifications when a document needs your signature, configured independently per account: off,
   a periodic background check (needs no extra app), or instant delivery via
   [UnifiedPush](https://unifiedpush.org/) (needs a small distributor app such as `ntfy`
