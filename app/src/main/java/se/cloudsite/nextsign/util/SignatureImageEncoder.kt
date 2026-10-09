@@ -68,12 +68,37 @@ object SignatureImageEncoder {
         }
     }
 
+    // A picked gallery photo can be tens of megapixels - decoding it at full
+    // resolution first (the old approach) allocates a huge intermediate bitmap
+    // (e.g. a 12MP photo is ~48MB as ARGB_8888) just to immediately downscale it
+    // afterward. inSampleSize downsamples during decode itself, so the full-size
+    // bitmap is never allocated in the first place.
     private fun readBitmap(context: Context, uri: Uri): Bitmap? {
         return try {
-            context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            context.contentResolver.openInputStream(uri)?.use {
+                BitmapFactory.decodeStream(it, null, bounds)
+            }
+            val options = BitmapFactory.Options().apply {
+                inSampleSize = calculateInSampleSize(bounds.outWidth, bounds.outHeight, MAX_DIMENSION_PX)
+            }
+            context.contentResolver.openInputStream(uri)?.use {
+                BitmapFactory.decodeStream(it, null, options)
+            }
         } catch (e: Exception) {
             null
         }
+    }
+
+    // inSampleSize only supports power-of-two reductions, so this gets as close
+    // to MAX_DIMENSION_PX as possible without going under it - downscaleIfNeeded()
+    // still does the precise final resize afterward.
+    private fun calculateInSampleSize(width: Int, height: Int, maxDimension: Int): Int {
+        var sampleSize = 1
+        while (width / (sampleSize * 2) >= maxDimension && height / (sampleSize * 2) >= maxDimension) {
+            sampleSize *= 2
+        }
+        return sampleSize
     }
 
     private fun downscaleIfNeeded(bitmap: Bitmap): Bitmap {
