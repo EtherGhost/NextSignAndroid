@@ -42,7 +42,7 @@ class PushServiceImpl : PushService() {
         }
         withAccount(instance) { account ->
             val api = ApiProvider.getNotificationsApi(applicationContext, account)
-            val response = api.registerWebPush(endpoint.url, pubKeySet.pubKey, pubKeySet.auth, "all").execute()
+            val response = api.registerWebPush(endpoint.url, pubKeySet.pubKey, pubKeySet.auth, "libresign").execute()
             Log.i(TAG, "registerWebPush: HTTP ${response.code()} for ${account.name}")
         }
     }

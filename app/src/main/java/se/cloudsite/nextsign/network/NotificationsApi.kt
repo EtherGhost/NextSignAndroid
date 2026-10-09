@@ -21,8 +21,13 @@ interface NotificationsApi {
     fun getVapidKey(): Call<OcsResponse<VapidData>>
 
     // appTypes: comma-separated Nextcloud app ids to filter notifications by, or
-    // "all" for everything - "all" is used for this proof of concept so any
-    // notification confirms the pipeline works, not just LibreSign's.
+    // "all" for everything. PushServiceImpl passes "libresign" (confirmed as
+    // LibreSign's actual Nextcloud app id via its own appinfo/info.xml) - using
+    // "all" was a proof-of-concept shortcut early in development that leaked into
+    // 1.1.0/1.2.0 unnoticed, so this account's push endpoint also delivered
+    // unrelated Nextcloud notifications (e.g. calendar) through NextSign. If this
+    // app ever needs more than one app id, Nextcloud's own syntax is
+    // comma-separated with a `-` prefix to exclude, e.g. "all,-talk".
     @FormUrlEncoded
     @POST("webpush?format=json")
     fun registerWebPush(
