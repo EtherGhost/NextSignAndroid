@@ -5,7 +5,6 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.util.Base64
 import android.net.Uri
 import android.provider.OpenableColumns
@@ -119,6 +118,7 @@ import se.cloudsite.nextsign.ui.signature.SignatureDrawScreen
 import se.cloudsite.nextsign.ui.signature.SignatureSetupScreen
 import se.cloudsite.nextsign.ui.theme.NextSignTheme
 import se.cloudsite.nextsign.util.AccountHistory
+import se.cloudsite.nextsign.util.BitmapFileDecoder
 import se.cloudsite.nextsign.util.LanguagePreference
 import se.cloudsite.nextsign.util.LocaleHelper
 import se.cloudsite.nextsign.util.NotificationMode
@@ -145,6 +145,15 @@ class MainActivity : ComponentActivity() {
         // base together (see PrepareDocumentScreen), not independently.
         private const val FIELD_BASE_WIDTH = 150f
         private const val FIELD_BASE_HEIGHT = 50f
+
+        // Avatars are requested from Nextcloud's own endpoint already sized to 64px
+        // (see DocumentDownloader.downloadAvatar) - this just gives headroom for
+        // high-density displays rather than assuming the server always honors it.
+        private const val AVATAR_MAX_DIMENSION_PX = 128
+        // Matches SignatureImageEncoder's own upload cap - a signature uploaded by
+        // this app is never larger than this, but one set via LibreSign's web UI
+        // could be, so this still guards against decoding a much bigger file.
+        private const val SIGNATURE_PREVIEW_MAX_DIMENSION_PX = 1200
     }
 
     // Applied here too, not just in NextSignApplication - an Activity's own base
@@ -1314,7 +1323,7 @@ class MainActivity : ComponentActivity() {
             val result = withContext(Dispatchers.IO) { documentDownloader.downloadAvatar(account) }
             if (account !== this@MainActivity.account) return@launch
             when (result) {
-                is DownloadResult.Success -> avatarBitmap = BitmapFactory.decodeFile(result.file.path)
+                is DownloadResult.Success -> avatarBitmap = BitmapFileDecoder.decodeSampled(result.file.path, AVATAR_MAX_DIMENSION_PX)
                 is DownloadResult.Failure -> { /* Non-fatal - falls back to the initial-letter avatar. */ }
             }
         }
@@ -1341,7 +1350,7 @@ class MainActivity : ComponentActivity() {
                 }
                 val bitmap = resolved?.let {
                     when (val result = withContext(Dispatchers.IO) { documentDownloader.downloadAvatar(it) }) {
-                        is DownloadResult.Success -> BitmapFactory.decodeFile(result.file.path)
+                        is DownloadResult.Success -> BitmapFileDecoder.decodeSampled(result.file.path, AVATAR_MAX_DIMENSION_PX)
                         is DownloadResult.Failure -> null
                     }
                 }
@@ -1365,7 +1374,7 @@ class MainActivity : ComponentActivity() {
             val result = withContext(Dispatchers.IO) { documentDownloader.downloadSignaturePreview(account, nodeId) }
             loadingSignaturePreview = false
             when (result) {
-                is DownloadResult.Success -> signaturePreviewBitmap = BitmapFactory.decodeFile(result.file.path)
+                is DownloadResult.Success -> signaturePreviewBitmap = BitmapFileDecoder.decodeSampled(result.file.path, SIGNATURE_PREVIEW_MAX_DIMENSION_PX)
                 is DownloadResult.Failure -> { /* Non-fatal - the picker/draw flow still works without a preview. */ }
             }
         }
